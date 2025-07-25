@@ -1,6 +1,5 @@
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
-import 'package:flame/input.dart'; // Necesario para el joystick
 import 'package:flutter/material.dart';
 
 class MyGame extends FlameGame {
@@ -10,21 +9,6 @@ class MyGame extends FlameGame {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-
-    final circle = CircleComponent(
-      radius: 60,
-      position: size / 2,
-      paint: Paint()..color = const Color(0xFF00FF00), // Color verde
-      anchor: Anchor.center,
-    );
-
-    final rec = RectangleComponent(
-      position: Vector2(100, 100),
-      size: Vector2.all(80),
-      anchor: Anchor.center,
-      paint: Paint()..color = Colors.white,
-      priority: 1,
-    );
 
     joystick = JoystickComponent(
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.orange),
@@ -36,11 +20,8 @@ class MyGame extends FlameGame {
       position: Vector2(200, 200),
       anchor: Anchor.center,
     );
-    //final );player = Player(joystick);
-    player = Player(radius: 30, position: size / 2);
+    player = Player(radius: 30, position: Vector2(200, 200));
     add(player);
-    add(rec);
-    add(circle);
     add(joystick);
   }
 }
@@ -48,21 +29,26 @@ class MyGame extends FlameGame {
 class Player extends CircleComponent with HasGameReference<MyGame> {
   Player({required double radius, required Vector2 position})
     : super(
-        radius: radius,
-        position: position,
+        radius: 20,
+        position: Vector2(100, 100),
         anchor: Anchor.center,
         paint: Paint()..color = const Color(0xFF00FF00),
         priority: 8,
+        children: [
+          CircleComponent(
+            radius: 6,
+            paint: Paint()..color = Colors.black,
+            position: Vector2(5, 5),
+          ),
+        ],
       );
 
-  // Velocidad de movimiento del jugador
-  final double _speed = 100;
+  final double _speed = 80;
 
   @override
   void update(double dt) {
     super.update(dt);
     if (game.joystick.direction != JoystickDirection.idle) {
-      // Mover el círculo en la dirección del joystick
       position.add(game.joystick.relativeDelta * _speed * dt);
     }
   }
