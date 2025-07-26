@@ -1,55 +1,74 @@
+import 'dart:math';
+
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 class MyGame extends FlameGame {
-  late final JoystickComponent joystick;
+  late final JoystickComponent movementJoystick;
+  late final JoystickComponent lookJoystick;
   late final Player player;
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
 
-    joystick = JoystickComponent(
-      knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.orange),
+    movementJoystick = JoystickComponent(
+      knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
       background: CircleComponent(
         radius: 50,
-        paint: Paint()..color = Colors.yellow,
+        paint: Paint()..color = Colors.blueGrey,
       ),
       margin: const EdgeInsets.only(left: 40, bottom: 40),
-      position: Vector2(200, 200),
-      anchor: Anchor.center,
     );
-    player = Player(radius: 30, position: Vector2(200, 200));
+
+    lookJoystick = JoystickComponent(
+      knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
+      background: CircleComponent(
+        radius: 50,
+        paint: Paint()..color = Colors.blueGrey,
+      ),
+      margin: const EdgeInsets.only(right: 40, bottom: 40),
+      position: Vector2(size.x - 100, size.y - 100),
+    );
+
+    // Cargar el sprite antes de crear el jugador
+    final sprite = await Sprite.load('heart.png');
+    player = Player(sprite: sprite, position: Vector2(200, 200));
+
     add(player);
-    add(joystick);
+    add(movementJoystick);
+    add(lookJoystick);
   }
 }
 
-class Player extends CircleComponent with HasGameReference<MyGame> {
-  Player({required double radius, required Vector2 position})
+class Player extends SpriteComponent with HasGameReference<MyGame> {
+  Player({required Sprite sprite, required Vector2 position})
     : super(
-        radius: 20,
-        position: Vector2(100, 100),
+        position: position,
+        size: Vector2.all(25),
         anchor: Anchor.center,
-        paint: Paint()..color = const Color(0xFF00FF00),
+        sprite: sprite,
         priority: 8,
-        children: [
-          CircleComponent(
-            radius: 6,
-            paint: Paint()..color = Colors.black,
-            position: Vector2(5, 5),
-          ),
-        ],
       );
 
   final double _speed = 80;
+  double _angle = 0;
 
   @override
   void update(double dt) {
     super.update(dt);
-    if (game.joystick.direction != JoystickDirection.idle) {
-      position.add(game.joystick.relativeDelta * _speed * dt);
+
+    // Movimiento
+    if (game.movementJoystick.direction != JoystickDirection.idle) {
+      position.add(game.movementJoystick.relativeDelta * _speed * dt);
+    }
+
+    // Rotación - ahora aplicamos la rotación al sprite completo
+    if (game.lookJoystick.direction != JoystickDirection.idle) {
+      _angle = game.lookJoystick.relativeDelta.screenAngle();
+      const double orientationCorrection = pi;
+      angle = _angle + orientationCorrection; // Esto rotará el sprite completo
     }
   }
 }
