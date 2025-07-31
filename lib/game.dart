@@ -4,23 +4,29 @@ import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
-//decidir. space: par de clases de disparos no!!  inframundo, sigilo?
+//pensamientos segundo juego: quiero implementar un videjuego similar dungeons y dragons, empezar en una celda en el inframundo, aprovechar que el movementJoystick tiene diferentes velocidades para implementar el sigilo dependiendo de cuan cerca este a algun enemigo y cuan rapido se mueva para que su presencia no sea detectada
+
+//pensamientos primer juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
+
+//HudButtonComponent? que diferencias y beneficios tiene a diferencia de ButtonComponet si lo quiero usar para disparar
 
 class MyGame extends FlameGame with HasGameReference<MyGame> {
   late final JoystickComponent movementJoystick;
   late final JoystickComponent lookJoystick;
   late final Player player;
-  late final ButtonComponent shootButton;
+  //late final ButtonComponent shootButton;
+  late final HudButtonComponent shootButton;
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
+    await super.onLoad();
 
     final sprite = await Sprite.load('heart.png');
     player = Player(sprite: sprite, position: Vector2(200, 200));
+    add(player);
 
-    // Movement Joystick
     movementJoystick = JoystickComponent(
+      //pregunta: si la instancia de este bloque es late final JoystickComponent movementJoystick; entonces aqui en este  movementJoystick que es? es para saber mas del lingo de flutter y dart, es esto tambien una estancia? aqui se que se crea el componente y se instancia arriba, cierto?
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
       background: CircleComponent(
         radius: 50,
@@ -28,8 +34,8 @@ class MyGame extends FlameGame with HasGameReference<MyGame> {
       ),
       margin: const EdgeInsets.only(left: 40, bottom: 40),
     );
+    add(movementJoystick);
 
-    // Look Joystick
     lookJoystick = JoystickComponent(
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
       background: CircleComponent(
@@ -37,28 +43,28 @@ class MyGame extends FlameGame with HasGameReference<MyGame> {
         paint: Paint()..color = Colors.blueGrey,
       ),
       margin: const EdgeInsets.only(right: 40, bottom: 40),
-      position: Vector2(size.x - 100, size.y - 100),
+      //position: Vector2(size.x - 100, size.y - 100),
     );
+    add(lookJoystick);
 
-    // Shoot Button
-    shootButton = ButtonComponent(
+    shootButton = HudButtonComponent(
       button: CircleComponent(radius: 40, paint: Paint()..color = Colors.blue),
-      position: Vector2(size.x - 100, 60),
+      //position: Vector2(size.x - 100, 60),
       onPressed: _shoot,
       priority: 10,
     );
-
-    add(player);
-    add(movementJoystick);
-    add(lookJoystick);
     add(shootButton);
   }
 
-  //asegura la posicion de shootButton (se estaba posicionando antes de saber el size, en la mitad)
+  //asegura la posicion de los botones y joystics (se estaba posicionando antes de saber el size, en la mitad)
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    shootButton.position = Vector2(size.x - 100, 60);
+    //shootButton.position = Vector2(size.x - 100, 60);
+    if (isLoaded) {
+      shootButton.position = Vector2(size.x - 100, 60);
+      lookJoystick.position = Vector2(size.x - 100, size.y - 100);
+    }
   }
 
   void _shoot() {
@@ -111,7 +117,7 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
     required this.speed,
   }) : super(
          position: position,
-         size: Vector2(10, 20), // Adjust size to match your sprite
+         size: Vector2(10, 20),
          anchor: Anchor.center,
          angle: angle,
        );
@@ -119,7 +125,6 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    // Load your bullet sprite (make sure the image is in your assets)
     sprite = await Sprite.load('star.png');
   }
 
