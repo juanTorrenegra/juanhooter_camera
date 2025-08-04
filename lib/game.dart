@@ -1,8 +1,9 @@
-import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
+import 'package:juanshooter/actors/player.dart';
+import 'package:juanshooter/weapons/bullet.dart';
 
 //pensamientos segundo juego: quiero implementar un videjuego similar dungeons y dragons, empezar en una celda en el inframundo, aprovechar que el movementJoystick tiene diferentes velocidades para implementar el sigilo dependiendo de cuan cerca este a algun enemigo y cuan rapido se mueva para que su presencia no sea detectada
 
@@ -74,72 +75,5 @@ class MyGame extends FlameGame with HasGameReference<MyGame> {
       speed: 300,
     );
     add(bullet);
-  }
-}
-
-class Player extends SpriteComponent with HasGameReference<MyGame> {
-  Player({required Sprite sprite, required Vector2 position})
-    : super(
-        position: position,
-        size: Vector2.all(17),
-        anchor: Anchor.center,
-        sprite: sprite,
-        priority: 8,
-      );
-
-  final double _speed = 80;
-  double _angle = 0;
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-
-    // Movement
-    if (game.movementJoystick.direction != JoystickDirection.idle) {
-      position.add(game.movementJoystick.relativeDelta * _speed * dt);
-    }
-
-    // Rotation
-    if (game.lookJoystick.direction != JoystickDirection.idle) {
-      _angle = game.lookJoystick.relativeDelta.screenAngle();
-      const double orientationCorrection = pi;
-      angle = _angle + orientationCorrection;
-    }
-  }
-}
-
-class Bullet extends SpriteComponent with HasGameReference<MyGame> {
-  final double speed;
-
-  Bullet({
-    required Vector2 position,
-    required double angle,
-    required this.speed,
-  }) : super(
-         position: position,
-         size: Vector2(10, 20),
-         anchor: Anchor.center,
-         angle: angle,
-       );
-
-  @override
-  Future<void> onLoad() async {
-    super.onLoad();
-    sprite = await Sprite.load('star.png');
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-
-    final direction = Vector2(cos(angle), sin(angle));
-    position.add(direction * speed * dt);
-
-    if (position.x < 0 ||
-        position.y < 0 ||
-        position.x > game.size.x ||
-        position.y > game.size.y) {
-      removeFromParent();
-    }
   }
 }
