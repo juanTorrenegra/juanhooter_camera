@@ -9,8 +9,6 @@ import 'package:juanshooter/weapons/bullet.dart';
 
 //pensamientos primer juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
 
-//HudButtonComponent? que diferencias y beneficios tiene a diferencia de ButtonComponet si lo quiero usar para disparar
-
 class MyGame extends FlameGame with HasGameReference<MyGame> {
   late final JoystickComponent movementJoystick;
   late final JoystickComponent lookJoystick;
@@ -22,7 +20,7 @@ class MyGame extends FlameGame with HasGameReference<MyGame> {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    final sprite = await Sprite.load('heart.png');
+    final sprite = await Sprite.load('ship.png');
     player = Player(sprite: sprite, position: Vector2(200, 200));
     add(player);
 
