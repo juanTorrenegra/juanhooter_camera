@@ -20,14 +20,14 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   void update(double dt) {
     super.update(dt);
 
-    // Movement
-    if (game.movementJoystick.direction != JoystickDirection.idle) {
-      position.add(game.movementJoystick.relativeDelta * _speed * dt);
+    // Movement: accede al joystick a través de game.hud
+    if (game.hud.movementJoystick.direction != JoystickDirection.idle) {
+      position.add(game.hud.movementJoystick.relativeDelta * _speed * dt);
     }
 
     // Rotation
-    if (game.lookJoystick.direction != JoystickDirection.idle) {
-      _angle = game.lookJoystick.relativeDelta.screenAngle();
+    if (game.hud.lookJoystick.direction != JoystickDirection.idle) {
+      _angle = game.hud.lookJoystick.relativeDelta.screenAngle();
       const double orientationCorrection = pi;
       angle = _angle + orientationCorrection;
     }

@@ -1,81 +1,109 @@
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
+import 'package:juanshooter/game.dart'; // Importa tu archivo game.dart
 
-class GameHud extends HudCompo with HasGameReference {
-  late JoystickComponent moveJoystick;
-  late JoystickComponent lookJoystick;
-  late HudButtonComponent shootButton;
-
-  Vector2 lastMoveDir = Vector2.zero();
-  Vector2 lastLookDir = Vector2.zero();
-  bool shootPressed = false;
-
-  GameHud();
+class GameHud extends PositionComponent with HasGameReference<MyGame> {
+  late final JoystickComponent movementJoystick;
+  late final JoystickComponent lookJoystick;
+  late final HudButtonComponent shootButton;
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
-
-    // 🎮 Joystick de movimiento
-    moveJoystick = JoystickComponent(
-      knob: CircleComponent(radius: 20, paint: Paint()..color = Colors.grey),
+    // Configuración del joystick de movimiento
+    movementJoystick = JoystickComponent(
+      knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
       background: CircleComponent(
         radius: 50,
-        paint: Paint()..color = Colors.black54,
+        paint: Paint()..color = Colors.blueGrey,
       ),
-      margin: const EdgeInsets.only(left: 40, bottom: 40),
     );
 
-    // 🎯 Joystick de vista
+    // Configuración del joystick de mira
     lookJoystick = JoystickComponent(
-      knob: CircleComponent(radius: 20, paint: Paint()..color = Colors.grey),
+      knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
       background: CircleComponent(
         radius: 50,
-        paint: Paint()..color = Colors.black54,
+        paint: Paint()..color = Colors.blueGrey,
       ),
-      margin: const EdgeInsets.only(right: 40, bottom: 40),
     );
 
-    // 🔫 Botón de disparo
+    // Configuración del botón de disparo
     shootButton = HudButtonComponent(
-      button: CircleComponent(radius: 30, paint: Paint()..color = Colors.red),
-      margin: const EdgeInsets.only(right: 40, top: 40),
-      onPressed: () {
-        if (!shootPressed) {
-          shootPressed = true;
-          print("🔫 Disparo iniciado");
-        }
-      },
-      onReleased: () {
-        if (shootPressed) {
-          shootPressed = false;
-          print("🛑 Disparo detenido");
-        }
-      },
+      button: CircleComponent(radius: 40, paint: Paint()..color = Colors.blue),
+      onPressed: () => game.shoot(),
     );
 
-    addAll([moveJoystick, lookJoystick, shootButton]);
+    // Añadir componentes al HUD
+    add(movementJoystick);
+    add(lookJoystick);
+    add(shootButton);
+
+    _positionComponents();
   }
 
   @override
-  void update(double dt) {
-    super.update(dt);
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    _positionComponents();
+  }
 
-    // Depuración solo si se mueve el joystick de movimiento
-    if (moveJoystick.relativeDelta != lastMoveDir) {
-      lastMoveDir = moveJoystick.relativeDelta.clone();
-      if (lastMoveDir.length > 0) {
-        print("🎮 Movimiento: $lastMoveDir");
-      }
-    }
+  void _positionComponents() {
+    // Solo posiciona si los componentes están cargados y el tamaño es válido
+    if (isLoaded && game.size.x > 0 && game.size.y > 0) {
+      final margin = 60.0; // Ajusta este valor según necesites
+      final joystickSize = 100.0; // Tamaño del joystick (radio + margen)
 
-    // Depuración solo si se mueve el joystick de vista
-    if (lookJoystick.relativeDelta != lastLookDir) {
-      lastLookDir = lookJoystick.relativeDelta.clone();
-      if (lastLookDir.length > 0) {
-        print("🎯 Vista: $lastLookDir");
-      }
+      // Posiciona el joystick de movimiento (abajo-izquierda)
+      movementJoystick.position = Vector2(
+        margin + joystickSize / 2,
+        game.size.y - margin - joystickSize / 2,
+      );
+
+      // Posiciona el joystick de mira (abajo-derecha)
+      lookJoystick.position = Vector2(
+        game.size.x - margin - joystickSize / 2,
+        game.size.y - margin - joystickSize / 2,
+      );
+
+      // Posiciona el botón de disparo (arriba-derecha)
+      shootButton.position = Vector2(
+        game.size.x - margin - 40, // 40 = radio del botón
+        margin,
+      );
     }
   }
 }
+
+  //soluciona El problema de posicionamiento inicial se debe a que size no está disponible hasta que se ejecuta
+  //@override
+  //void onGameResize(Vector2 size) {
+  //  super.onGameResize(size);
+  //  //shootButton.position = Vector2(size.x - 100, 60);
+  //  if (isLoaded) {
+  //    shootButton.position = Vector2(size.x - 100, 60);
+  //    lookJoystick.position = Vector2(size.x - 100, size.y - 100);
+  //  }
+  //}
+  //@override
+  //void onGameResize(Vector2 size) {
+  //  super.onGameResize(size);
+  //  // Posicionamiento relativo
+  //  movementJoystick.position = Vector2(40, size.y - 40);
+  //  lookJoystick.position = Vector2(size.x - 40, size.y - 40);
+  //  shootButton.position = Vector2(size.x - 40, 40);
+  //}
+//
+
+  // Depuración en tiempo real
+  //@override
+  //void update(double dt) {
+  //  super.update(dt);
+  //  if (movementJoystick.delta.isZero() == false) {
+  //    print("🕹 Movimiento: ${movementJoystick.delta}");
+  //  }
+  //  if (lookJoystick.delta.isZero() == false) {
+  //    print("🎯 Mira: ${lookJoystick.delta}");
+  //  }
+  //}
+//
