@@ -7,7 +7,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   Player({required Sprite sprite, required Vector2 position})
     : super(
         position: position,
-        size: Vector2.all(50),
+        size: Vector2.all(30),
         anchor: Anchor.center,
         sprite: sprite,
         priority: 8,
@@ -25,11 +25,14 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       position.add(game.hud.movementJoystick.relativeDelta * _speed * dt);
     }
 
-    // Rotation
+    // Rotación (corrige el ángulo)
     if (game.hud.lookJoystick.direction != JoystickDirection.idle) {
+      // Obtén el ángulo del joystick (en radianes)
       _angle = game.hud.lookJoystick.relativeDelta.screenAngle();
-      const double orientationCorrection = pi;
-      angle = _angle + orientationCorrection;
+
+      // Ajusta el ángulo para que coincida con la orientación del sprite
+      const double offset = -pi / 2; // Ajusta este valor según tu sprite
+      angle = _angle + offset;
     }
   }
 }
