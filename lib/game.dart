@@ -8,37 +8,44 @@ import 'package:juanshooter/weapons/bullet.dart';
 
 //pensamientos primer juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
 
-//implementar test.png ABAJO!!!
 class MyGame extends FlameGame with HasGameReference<MyGame> {
   late final Player player;
   late final GameHud hud;
   late final World universo;
   CameraComponent? camara;
+  Vector2 currentPlayerPos = Vector2.zero();
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
     universo = World();
+    add(universo);
+
     camara = CameraComponent(world: universo);
-    camara!.viewfinder.anchor = Anchor.center;
-    camara!.viewfinder.position = Vector2(size.x / 2, size.y / 2);
+    camara?.viewfinder.anchor = Anchor.center;
+    add(camara!);
+
     final background = SpriteComponent(
       sprite: await Sprite.load('test.png'),
       size: Vector2(1600, 1600),
+      anchor: Anchor.center,
+      position: Vector2(800, 800), // Centro del mundo
     );
-    //background.position = Vector2(size.x / 2, size.y / 2);
-
-    final sprite = await Sprite.load('ship.png');
-    player = Player(sprite: sprite, position: Vector2(size.x / 2, size.y / 2));
-    hud = GameHud()..priority = 10;
-
-    add(universo);
-    add(camara!);
-    add(hud);
-
     universo.add(background);
-    universo.add(player);
+
+    player = Player(
+      sprite: await Sprite.load('ship.png'),
+      position: Vector2(800, 800),
+    );
+    await universo.add(player);
+
+    currentPlayerPos = player.position.clone();
+
+    camara?.follow(player);
+
+    hud = GameHud()..priority = 10;
+    add(hud);
   }
 
   @override
@@ -51,9 +58,20 @@ class MyGame extends FlameGame with HasGameReference<MyGame> {
     final bullet = Bullet(
       position: player.position.clone(),
       angle: player.angle,
-      speed: 300,
+      speed: 200,
     );
-    add(bullet);
+    universo.add(bullet);
+    print("posicion = $currentPlayerPos");
     //print("se crea el bullet");
+
+    print('Bala disparada desde: ${player.position}');
+    print('Posición actual del jugador: $currentPlayerPos');
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    // Actualizar posición de depuración
+    currentPlayerPos.setFrom(player.position);
   }
 }
