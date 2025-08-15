@@ -12,30 +12,27 @@ import 'package:juanshooter/weapons/bullet.dart';
 class MyGame extends FlameGame with HasGameReference<MyGame> {
   late final Player player;
   late final GameHud hud;
+  late final World universo;
   CameraComponent? _camera;
-
-  //late final World universo;
 
   @override
   Future<void> onLoad() async {
-    //print("se inicia el on Load");
     await super.onLoad();
+
+    universo = World();
+    _camera = CameraComponent(world: universo);
+    _camera!.viewfinder.anchor = Anchor.center;
+    _camera!.viewfinder.position = Vector2(size.x / 2, size.y / 2);
 
     final sprite = await Sprite.load('ship.png');
     player = Player(sprite: sprite, position: Vector2(size.x / 2, size.y / 2));
-
-    //universo = World();
-    //add(universo);
-
-    add(player);
-
     hud = GameHud();
+
+    add(universo);
+    add(_camera!);
     add(hud);
 
-    _camera = CameraComponent(world: World());
-    add(_camera!);
-    _camera!.viewfinder.anchor = Anchor.center;
-    _camera!.viewfinder.position = Vector2(size.x / 2, size.y / 2);
+    universo.add(player);
   }
 
   @override
