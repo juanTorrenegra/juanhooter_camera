@@ -23,15 +23,21 @@ class MyGame extends FlameGame with HasGameReference<MyGame> {
     _camera = CameraComponent(world: universo);
     _camera!.viewfinder.anchor = Anchor.center;
     _camera!.viewfinder.position = Vector2(size.x / 2, size.y / 2);
+    final background = SpriteComponent(
+      sprite: await Sprite.load('test.png'),
+      size: Vector2(1600, 1600),
+    );
+    //background.position = Vector2(size.x / 2, size.y / 2);
 
     final sprite = await Sprite.load('ship.png');
     player = Player(sprite: sprite, position: Vector2(size.x / 2, size.y / 2));
-    hud = GameHud();
+    hud = GameHud()..priority = 10;
 
     add(universo);
     add(_camera!);
     add(hud);
 
+    universo.add(background);
     universo.add(player);
   }
 
