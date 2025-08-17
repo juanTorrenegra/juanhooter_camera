@@ -13,7 +13,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
         priority: 8,
       );
 
-  final double _speed = 80;
+  final double _speed = 250;
   double _angle = 0;
 
   @override

@@ -1,3 +1,4 @@
+import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
@@ -5,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:juanshooter/weapons/bullet.dart';
-
+//tamaño de pantalla = [796.3636474609375,392.7272644042969]
 //pensamientos primer juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
+
+//
 
 class MyGame extends FlameGame with HasGameReference<MyGame> {
   late final Player player;
@@ -22,30 +25,33 @@ class MyGame extends FlameGame with HasGameReference<MyGame> {
     universo = World();
     add(universo);
 
-    camara = CameraComponent(world: universo);
-    camara?.viewfinder.anchor = Anchor.center;
+    camara = CameraComponent(
+      world: universo,
+      viewfinder: Viewfinder()..anchor = Anchor.center,
+    );
+    //camara?.viewfinder.anchor = Anchor.center;
     add(camara!);
 
     final background = SpriteComponent(
-      sprite: await Sprite.load('test.png'),
+      sprite: await Sprite.load('teststars.png'),
       size: Vector2(1600, 1600),
       anchor: Anchor.center,
-      position: Vector2(800, 800), // Centro del mundo
-    );
+      position: Vector2(800, 800),
+    )..priority = -100;
     universo.add(background);
 
     player = Player(
       sprite: await Sprite.load('ship.png'),
       position: Vector2(800, 800),
     );
-    await universo.add(player);
+    universo.add(player);
+
+    hud = GameHud()..priority = 100;
+    camara?.viewport.add(hud);
 
     currentPlayerPos = player.position.clone();
 
     camara?.follow(player);
-
-    hud = GameHud()..priority = 10;
-    add(hud);
   }
 
   @override
