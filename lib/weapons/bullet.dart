@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:juanshooter/game.dart';
 
@@ -25,6 +26,7 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
   Future<void> onLoad() async {
     super.onLoad();
     sprite = await Sprite.load('star.png');
+    add(RectangleHitbox(collisionType: CollisionType.passive));
   }
 
   @override

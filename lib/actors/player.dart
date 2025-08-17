@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:juanshooter/game.dart';
 
@@ -15,6 +16,11 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
 
   final double _speed = 250;
   double _angle = 0;
+
+  @override
+  Future<void> onLoad() async {
+    add(CircleHitbox());
+  }
 
   @override
   void update(double dt) {
