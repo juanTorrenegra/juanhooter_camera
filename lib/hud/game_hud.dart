@@ -7,10 +7,10 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final JoystickComponent movementJoystick;
   late final JoystickComponent lookJoystick;
   late final HudButtonComponent shootButton;
+  late final HudButtonComponent fastButton;
 
   @override
   Future<void> onLoad() async {
-    // Configuración del joystick de movimiento
     movementJoystick = JoystickComponent(
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
       background: CircleComponent(
@@ -19,7 +19,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       ),
     );
 
-    // Configuración del joystick de mira
     lookJoystick = JoystickComponent(
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
       background: CircleComponent(
@@ -28,17 +27,34 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       ),
     );
 
-    // Configuración del botón de disparo
     shootButton = HudButtonComponent(
       button: CircleComponent(radius: 40, paint: Paint()..color = Colors.blue),
 
       onPressed: () => game.shoot(),
     );
 
+    fastButton = HudButtonComponent(
+      button: CircleComponent(
+        radius: 20,
+        paint: Paint()..color = Colors.red.shade900,
+        children: [
+          TextComponent(
+            position: Vector2(6, 12),
+            text: 'Fast',
+            textRenderer: TextPaint(
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+      onPressed: () => game.fast(),
+    );
+
     // Añadir componentes al HUD
     add(movementJoystick);
     add(lookJoystick);
     add(shootButton);
+    add(fastButton);
 
     _positionComponents();
   }
@@ -72,6 +88,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         game.size.x - margin - 40, // 40 = radio del botón
         margin,
       );
+      fastButton.position = Vector2(margin, margin);
     }
   }
 }

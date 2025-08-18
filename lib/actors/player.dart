@@ -14,8 +14,15 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
         priority: 8,
       );
 
-  final double _speed = 250;
+  //double _baseSpeed = 80;
+  double _currentSpeed = 80;
+  bool isFastMode = false;
   double _angle = 0;
+
+  void toggleFastMode(bool activate) {
+    isFastMode = !isFastMode; // Invierte el estado actual
+    _currentSpeed = isFastMode ? 300 : 80;
+  }
 
   @override
   Future<void> onLoad() async {
@@ -28,7 +35,9 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
 
     // Movement: accede al joystick a través de game.hud
     if (game.hud.movementJoystick.direction != JoystickDirection.idle) {
-      position.add(game.hud.movementJoystick.relativeDelta * _speed * dt);
+      position.add(
+        game.hud.movementJoystick.relativeDelta * _currentSpeed * dt,
+      );
     }
 
     // Rotación (corrige el ángulo)

@@ -10,7 +10,7 @@ import 'package:juanshooter/weapons/bullet.dart';
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
 // juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
 
-//prototipo.
+//prototipo
 
 class MyGame extends FlameGame
     with HasGameReference<MyGame>, HasCollisionDetection {
@@ -21,10 +21,15 @@ class MyGame extends FlameGame
   CameraComponent? camara;
   Vector2 currentPlayerPos = Vector2.zero();
 
+  void fast() {
+    // Llama al método del player
+    player.toggleFastMode(!player.isFastMode); // Alternar estado
+  }
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    debugMode = true;
+    //debugMode = true;
 
     universo = World();
     add(universo);
@@ -37,8 +42,8 @@ class MyGame extends FlameGame
     add(camara!);
 
     final background = SpriteComponent(
-      sprite: await Sprite.load('teststars.png'),
-      size: Vector2(1600, 1600),
+      sprite: await Sprite.load('pixab7kx5k.jpg'),
+      size: Vector2(4000, 2500),
       anchor: Anchor.center,
       position: Vector2(800, 800),
     )..priority = -100;
@@ -46,13 +51,13 @@ class MyGame extends FlameGame
 
     player = Player(
       sprite: await Sprite.load('ship.png'),
-      position: Vector2(800, 800),
+      position: Vector2(10, 10),
     );
     universo.add(player);
 
     enemigo = Enemigo(
       sprite: await Sprite.load('enemigo.png'),
-      position: Vector2(900, 800),
+      position: Vector2(100, 200),
     );
     universo.add(enemigo);
 
@@ -85,8 +90,6 @@ class MyGame extends FlameGame
     );
     universo.add(bullet);
     print("posicion = $currentPlayerPos");
-    //print("se crea el bullet");
-
     print('Bala disparada desde: ${player.position}');
     print('Posición actual del jugador: $currentPlayerPos');
   }

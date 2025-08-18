@@ -4,7 +4,10 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:juanshooter/game.dart';
 
-class Bullet extends SpriteComponent with HasGameReference<MyGame> {
+enum BulletState { spawn, travel, impact }
+
+class Bullet extends SpriteGroupComponent<BulletState>
+    with HasGameReference<MyGame>, CollisionCallbacks {
   final double speed;
   final Vector2 _direction = Vector2.zero();
 
@@ -25,14 +28,27 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    sprite = await Sprite.load('star.png');
-    add(RectangleHitbox(collisionType: CollisionType.passive));
+    sprites = {
+      BulletState.spawn: await Sprite.load('bullet_spawn.png'),
+      BulletState.travel: await Sprite.load('bullet_travel.png'),
+      BulletState.impact: await Sprite.load('bullet_impact.png'),
+    };
+    current = BulletState.spawn;
+
+    // Después de un tiempo corto, pasar al estado de viaje
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (isMounted) current = BulletState.travel;
+    });
+
+    add(RectangleHitbox(collisionType: CollisionType.active));
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    position += _direction * speed * dt;
+    if (current == BulletState.travel) {
+      position += _direction * speed * dt;
+    }
     //final direction = Vector2(cos(angle), sin(angle));
     //position.add(direction * speed * dt);
     if (position.x < 0 ||
@@ -41,5 +57,17 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
         position.y > 1600) {
       removeFromParent();
     }
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
+
+    // Al colisionar cambiamos a impacto y removemos luego
+    current = BulletState.impact;
+
+    Future.delayed(const Duration(milliseconds: 800), () {
+      removeFromParent();
+    });
   }
 }
