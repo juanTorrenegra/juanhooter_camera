@@ -12,23 +12,47 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     movementJoystick = JoystickComponent(
-      knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
+      knob: CircleComponent(
+        radius: 30,
+        paint: Paint()
+          ..color = Colors.cyan.withAlpha(150)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      ),
       background: CircleComponent(
         radius: 50,
-        paint: Paint()..color = Colors.blueGrey,
+        paint: Paint()
+          ..color = Colors.cyan.withAlpha(150)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
       ),
     );
 
     lookJoystick = JoystickComponent(
-      knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.grey),
+      knob: CircleComponent(
+        radius: 30,
+        paint: Paint()
+          ..color = Colors.cyan.withAlpha(150)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      ),
       background: CircleComponent(
         radius: 50,
-        paint: Paint()..color = Colors.blueGrey,
+        paint: Paint()
+          ..color = Colors.cyan.withAlpha(150)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
       ),
     );
 
     shootButton = HudButtonComponent(
-      button: CircleComponent(radius: 40, paint: Paint()..color = Colors.blue),
+      button: CircleComponent(
+        radius: 40,
+        paint: Paint()
+          ..color = Colors.cyan.withAlpha(150)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      ),
 
       onPressed: () => game.shoot(),
     );

@@ -8,10 +8,10 @@ import 'package:juanshooter/weapons/bullet.dart';
 
 class Enemigo extends SpriteComponent
     with HasGameReference<MyGame>, CollisionCallbacks {
-  Enemigo({required Sprite sprite, required Vector2 position})
+  Enemigo({required Sprite sprite, required Vector2 position, Vector2? size})
     : super(
         position: position,
-        size: Vector2.all(30),
+        size: size ?? Vector2.all(60),
         anchor: Anchor.center,
         sprite: sprite,
       );
