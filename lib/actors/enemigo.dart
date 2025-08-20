@@ -19,6 +19,7 @@ class Enemigo extends SpriteComponent
   double _shootCooldown = 0;
   final double _shootInterval = 1.5; // Dispara cada 1.5 segundos
   final double _aimTime = 2.0; // 2 segundos para apuntar
+  double _targetAngle = 0;
 
   Enemigo({
     required Sprite sprite,
@@ -71,11 +72,41 @@ class Enemigo extends SpriteComponent
     if (game.player.isMounted) {
       // Calcula el ángulo hacia el jugador
       final direction = game.player.position - position;
-      final targetAngle = atan2(direction.y, direction.x);
+      _targetAngle = atan2(direction.y, direction.x);
 
-      // Suaviza el giro (opcional)
-      angle = lerpDouble(angle, targetAngle, 5 * dt) ?? targetAngle;
+      // Normaliza los ángulos para evitar la rotación completa
+      angle = _smoothRotation(angle, _targetAngle, 5 * dt);
     }
+  }
+
+  double _smoothRotation(double currentAngle, double targetAngle, double t) {
+    // Normaliza ambos ángulos al rango [-π, π]
+    currentAngle = _normalizeAngle(currentAngle);
+    targetAngle = _normalizeAngle(targetAngle);
+
+    // Calcula la diferencia más corta entre los ángulos
+    double difference = targetAngle - currentAngle;
+
+    // Ajusta la diferencia para tomar el camino más corto
+    if (difference > pi) {
+      difference -= 2 * pi;
+    } else if (difference < -pi) {
+      difference += 2 * pi;
+    }
+
+    // Interpola suavemente
+    return currentAngle + difference * t;
+  }
+
+  double _normalizeAngle(double angle) {
+    // Normaliza el ángulo al rango [-π, π]
+    angle = angle % (2 * pi);
+    if (angle > pi) {
+      angle -= 2 * pi;
+    } else if (angle < -pi) {
+      angle += 2 * pi;
+    }
+    return angle;
   }
 
   void _handleShooting(double dt) {
@@ -124,10 +155,5 @@ class Enemigo extends SpriteComponent
 
       // game.add(Explosion(position: position));
     }
-  }
-
-  // Función de interpolación para giro suave
-  double lerpDouble(double a, double b, double t) {
-    return a + (b - a) * t;
   }
 }
