@@ -58,8 +58,8 @@ class MyGame extends FlameGame
     add(camara!);
 
     final background = SpriteComponent(
-      sprite: await Sprite.load('Nebula3.png'),
-      size: Vector2(800, 800),
+      sprite: await Sprite.load('b.png'), //Nebula3.png b.png
+      size: Vector2(3000, 1500),
       anchor: Anchor.topLeft,
       position: Vector2(0, 0),
     )..priority = -100;
@@ -72,9 +72,9 @@ class MyGame extends FlameGame
     universo.add(player);
 
     enemigo = Enemigo(
-      sprite: await Sprite.load('enemigo.png'),
-      position: Vector2(430, 400),
-      //size: Vector2(30, 30),
+      sprite: await Sprite.load('5.png'),
+      position: Vector2(100, 50),
+      size: Vector2(523, 390),
     );
     universo.add(enemigo);
 
@@ -208,7 +208,7 @@ class MyGame extends FlameGame
     final bullet = Bullet(
       position: player.position.clone(),
       angle: player.angle,
-      speed: 150,
+      speed: 200,
     );
     universo.add(bullet);
     print("posicion = $currentPlayerPos");

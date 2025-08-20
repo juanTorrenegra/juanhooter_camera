@@ -14,7 +14,7 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
     required this.speed,
   }) : super(
          position: position,
-         size: Vector2(20, 30),
+         size: Vector2(5, 52),
          anchor: Anchor.center,
          angle: angle + 3 * pi / 2,
        ) {
@@ -25,7 +25,7 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    sprite = await Sprite.load('kame1.png');
+    sprite = await Sprite.load('laserthin.png');
     add(CircleHitbox());
   }
 
@@ -39,8 +39,8 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
     //position.add(direction * speed * dt);
     if (position.x < 0 ||
         position.y < 0 ||
-        position.x > 1600 || // Tamaño de tu mundo
-        position.y > 1600) {
+        position.x > 3000 || // Tamaño de tu mundo
+        position.y > 3000) {
       removeFromParent();
     }
   }
