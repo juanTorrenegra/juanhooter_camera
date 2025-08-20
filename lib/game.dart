@@ -45,7 +45,7 @@ class MyGame extends FlameGame
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    //debugMode = true;
+    debugMode = true;
 
     universo = World();
     add(universo);
@@ -208,7 +208,7 @@ class MyGame extends FlameGame
     final bullet = Bullet(
       position: player.position.clone(),
       angle: player.angle,
-      speed: 200,
+      speed: 150,
     );
     universo.add(bullet);
     print("posicion = $currentPlayerPos");

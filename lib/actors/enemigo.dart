@@ -8,13 +8,22 @@ import 'package:juanshooter/weapons/bullet.dart';
 
 class Enemigo extends SpriteComponent
     with HasGameReference<MyGame>, CollisionCallbacks {
-  Enemigo({required Sprite sprite, required Vector2 position, Vector2? size})
-    : super(
-        position: position,
-        size: size ?? Vector2.all(60),
-        anchor: Anchor.center,
-        sprite: sprite,
-      );
+  int hitPoints;
+  final int maxHitPoints;
+
+  Enemigo({
+    required Sprite sprite,
+    required Vector2 position,
+    Vector2? size,
+    int? hitPoints,
+  }) : hitPoints = hitPoints ?? 3,
+       maxHitPoints = hitPoints ?? 3,
+       super(
+         position: position,
+         size: size ?? Vector2.all(50),
+         anchor: Anchor.center,
+         sprite: sprite,
+       );
   @override
   Future<void> onLoad() async {
     add(CircleHitbox(collisionType: CollisionType.active));
@@ -28,9 +37,14 @@ class Enemigo extends SpriteComponent
     super.onCollisionStart(intersectionPoints, other);
 
     if (other is Bullet) {
-      removeFromParent();
       other.removeFromParent();
-      //game.add(Explosion(position: position));
+      hitPoints--;
+
+      if (hitPoints <= 0) {
+        removeFromParent();
+      }
+
+      // game.add(Explosion(position: position));
     }
   }
 }
