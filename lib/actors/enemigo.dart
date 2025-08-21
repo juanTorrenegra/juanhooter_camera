@@ -33,6 +33,7 @@ class Enemigo extends SpriteComponent
          size: size ?? Vector2.all(50),
          anchor: Anchor.center,
          sprite: sprite,
+         //angle: pi,
        );
 
   @override
@@ -124,7 +125,7 @@ class Enemigo extends SpriteComponent
       final bullet = EnemyBullet(
         position: position.clone(),
         angle: angle,
-        speed: 250,
+        speed: 100,
       );
 
       game.universo.add(bullet);

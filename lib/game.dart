@@ -45,7 +45,7 @@ class MyGame extends FlameGame
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    debugMode = true;
+    //debugMode = true;
 
     universo = World();
     add(universo);
