@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
@@ -5,6 +7,7 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
+import 'package:juanshooter/actors/ranged_enemy.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
@@ -71,112 +74,123 @@ class MyGame extends FlameGame
     );
     universo.add(player);
 
-    enemigo = Enemigo(
+    enemigo = RangedEnemy(
       sprite: await Sprite.load('5.png'),
       position: Vector2(100, 50),
-      size: Vector2(523, 390),
+      size: Vector2(530, 300),
+      angle: pi / 2, // 90 grados en radianes (apunta hacia abajo)
+      maxHitPoints: 5,
+      shield: 2,
+      movementSpeed: 30,
+      rotationSpeed: 0.5, // Rotación lenta (titanes)
+      shootInterval: 2.0,
+      bulletSpeed: 300,
+      //aimTime: 2.0,
     );
     universo.add(enemigo);
 
-    enemigo1 = Enemigo(
-      sprite: await Sprite.load('9B.png'),
+    enemigo1 = RangedEnemy(
+      sprite: await Sprite.load('9B.png'), //izquierda
       position: Vector2(100, 300),
-      //size: Vector2(230, 336),
+      size: Vector2(230, 336),
+      maxHitPoints: 6,
+      rotationSpeed: 0.1,
+      bulletSpeed: 100,
     );
     universo.add(enemigo1);
 
-    enemigo2 = Enemigo(
-      sprite: await Sprite.load('11B.png'),
+    enemigo2 = RangedEnemy(
+      sprite: await Sprite.load('11B.png'), //morado
       position: Vector2(400, 300),
-      //size: Vector2(166, 110),
+      size: Vector2(166, 110),
     );
     universo.add(enemigo2);
 
-    enemigo3 = Enemigo(
-      sprite: await Sprite.load('3B.png'),
+    enemigo3 = RangedEnemy(
+      sprite: await Sprite.load('3B.png'), //derecha
       position: Vector2(550, 400),
-      //size: Vector2(182, 248),
+      size: Vector2(182, 248),
     );
     universo.add(enemigo3);
 
-    enemigo4 = Enemigo(
+    enemigo4 = RangedEnemy(
       sprite: await Sprite.load('7B.png'),
       position: Vector2(750, 550),
       //size: Vector2(140, 257),
     );
     universo.add(enemigo4);
 
-    enemigo5 = Enemigo(
+    enemigo5 = RangedEnemy(
       sprite: await Sprite.load('2B.png'),
       position: Vector2(900, 400),
       //size: Vector2(134, 199),
     );
     universo.add(enemigo5);
 
-    enemigo6 = Enemigo(
+    enemigo6 = RangedEnemy(
       sprite: await Sprite.load('8B.png'),
       position: Vector2(1050, 550),
       //size: Vector2(182, 232),
     );
     universo.add(enemigo6);
 
-    enemigo7 = Enemigo(
+    enemigo7 = RangedEnemy(
       sprite: await Sprite.load('4B.png'),
       position: Vector2(1300, 650),
       //size: Vector2(130, 185),
     );
     universo.add(enemigo7);
 
-    enemigo8 = Enemigo(
+    enemigo8 = RangedEnemy(
       sprite: await Sprite.load('12.png'),
       position: Vector2(1450, 600),
       //size: Vector2(342, 122),
     );
     universo.add(enemigo8);
 
-    enemigo9 = Enemigo(
+    enemigo9 = RangedEnemy(
       sprite: await Sprite.load('4.png'),
       position: Vector2(1600, 600),
       //size: Vector2(120, 185),
     );
     universo.add(enemigo9);
 
-    enemigo10 = Enemigo(
+    enemigo10 = RangedEnemy(
       sprite: await Sprite.load('13B.png'),
       position: Vector2(1750, 600),
       //size: Vector2(168, 104),
     );
     universo.add(enemigo10);
 
-    enemigo11 = Enemigo(
+    enemigo11 = RangedEnemy(
       sprite: await Sprite.load('5B.png'),
       position: Vector2(1950, 600),
       //size: Vector2(98, 171),
     );
     universo.add(enemigo11);
 
-    enemigo12 = Enemigo(
+    enemigo12 = RangedEnemy(
       sprite: await Sprite.load('6B.png'),
       position: Vector2(1450, 800),
       //size: Vector2(170, 102),
     );
     universo.add(enemigo12);
 
-    enemigo13 = Enemigo(
+    enemigo13 = RangedEnemy(
       sprite: await Sprite.load('5.png'),
       position: Vector2(1600, 700),
       // size: Vector2(98, 171),
     );
     universo.add(enemigo13);
 
-    enemigo14 = Enemigo(
+    enemigo14 = RangedEnemy(
       sprite: await Sprite.load('1B.png'),
       position: Vector2(1050, 700),
       //size: Vector2(124, 135),
     );
     universo.add(enemigo14);
 
-    enemigo15 = Enemigo(
+    enemigo15 = RangedEnemy(
       sprite: await Sprite.load('10B.png'),
       position: Vector2(900, 700),
       //size: Vector2(116, 110),
