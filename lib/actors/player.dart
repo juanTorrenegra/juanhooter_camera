@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:juanshooter/game.dart';
+import 'package:juanshooter/weapons/bullet.dart';
 
 class Player extends SpriteComponent with HasGameReference<MyGame> {
   Player({required Sprite sprite, required Vector2 position})
@@ -49,5 +50,17 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       const double offset = -pi / 2; // Ajusta este valor según tu sprite
       angle = _angle + offset;
     }
+  }
+
+  void shoot() {
+    final shootPosition = calculateShootPosition(
+      position,
+      angle,
+      size,
+      10.0, // Offset adicional desde el borde
+    );
+
+    final bullet = Bullet(position: shootPosition, angle: angle, speed: 150);
+    game.universo.add(bullet);
   }
 }

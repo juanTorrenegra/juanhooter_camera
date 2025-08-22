@@ -18,7 +18,6 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
          anchor: Anchor.center,
          angle: angle + 3 * pi / 2,
        ) {
-    //_direction.setFromPolar(angle, speed);
     _direction.setValues(cos(angle), sin(angle));
   }
 

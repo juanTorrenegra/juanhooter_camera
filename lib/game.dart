@@ -75,26 +75,23 @@ class MyGame extends FlameGame
     universo.add(player);
 
     enemigo = RangedEnemy(
+      //MINERO
       sprite: await Sprite.load('5.png'),
       position: Vector2(100, 50),
       size: Vector2(530, 300),
-      angle: pi / 2, // 90 grados en radianes (apunta hacia abajo)
-      maxHitPoints: 5,
-      shield: 2,
-      movementSpeed: 30,
-      rotationSpeed: 0.5, // Rotación lenta (titanes)
+      rotationSpeed: 0.5,
       shootInterval: 2.0,
-      bulletSpeed: 300,
-      //aimTime: 2.0,
+      bulletSpeed: 150,
+      shootingThreshold: 10,
     );
     universo.add(enemigo);
 
     enemigo1 = RangedEnemy(
-      sprite: await Sprite.load('9B.png'), //izquierda
+      sprite: await Sprite.load('9B.png'), //IZQUIERDA
       position: Vector2(100, 300),
       size: Vector2(230, 336),
       maxHitPoints: 6,
-      rotationSpeed: 0.1,
+      rotationSpeed: 0.4,
       bulletSpeed: 100,
     );
     universo.add(enemigo1);
@@ -103,6 +100,9 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('11B.png'), //morado
       position: Vector2(400, 300),
       size: Vector2(166, 110),
+      rotationSpeed: 0.6,
+      bulletSpeed: 100,
+      shootingThreshold: 30,
     );
     universo.add(enemigo2);
 
@@ -217,16 +217,20 @@ class MyGame extends FlameGame
     debugPrint('4. onGameResize (camera is $camara)');
     super.onGameResize(size);
   }
+}
 
-  void shoot() {
-    final bullet = Bullet(
-      position: player.position.clone(),
-      angle: player.angle,
-      speed: 150,
-    );
-    universo.add(bullet);
-    print("posicion = $currentPlayerPos");
-    print('Bala disparada desde: ${player.position}');
-    print('Posición actual del jugador: $currentPlayerPos');
-  }
+// calcular posicion inicial del disparo
+Vector2 calculateShootPosition(
+  Vector2 entityPosition,
+  double angle,
+  Vector2 entitySize,
+  double offsetDistance,
+) {
+  // Calcula el punto frente al sprite basado en el ángulo y tamaño
+  final offset = Vector2(
+    cos(angle) * (entitySize.x / 2 + offsetDistance),
+    sin(angle) * (entitySize.y / 2 + offsetDistance),
+  );
+
+  return entityPosition + offset;
 }
