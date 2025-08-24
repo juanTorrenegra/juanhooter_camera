@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/actors/ranged_enemy.dart';
+import 'package:juanshooter/actors/turret.dart';
+import 'package:juanshooter/actors/turret_ship.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
@@ -18,7 +20,7 @@ import 'package:juanshooter/weapons/bullet.dart';
 class MyGame extends FlameGame
     with HasGameReference<MyGame>, HasCollisionDetection {
   late final Player player;
-  late final Enemigo enemigo;
+  late final TurretShip mineroTorretas;
   late final Enemigo enemigo1;
   late final Enemigo enemigo2;
   late final Enemigo enemigo3;
@@ -74,17 +76,30 @@ class MyGame extends FlameGame
     );
     universo.add(player);
 
-    enemigo = RangedEnemy(
-      //MINERO
-      sprite: await Sprite.load('5.png'),
+    mineroTorretas = TurretShip(
+      sprite: await Sprite.load('5.png'), //MINERO
       position: Vector2(100, 50),
       size: Vector2(530, 300),
       rotationSpeed: 0.5,
       shootInterval: 2.0,
       bulletSpeed: 150,
       shootingThreshold: 10,
+      turretConfigs: [
+        TurretConfig(
+          spritePath: '11B.png',
+          relativePosition: Vector2(50, 50), // Torreta a la derecha
+          rotationSpeed: 2.0,
+          size: Vector2(30, 30),
+        ),
+        TurretConfig(
+          spritePath: '11B.png',
+          relativePosition: Vector2(-50, -50), // Torreta a la izquierda
+          rotationSpeed: 2.0,
+          size: Vector2(30, 30),
+        ),
+      ],
     );
-    universo.add(enemigo);
+    universo.add(mineroTorretas);
 
     enemigo1 = RangedEnemy(
       sprite: await Sprite.load('9B.png'), //IZQUIERDA
