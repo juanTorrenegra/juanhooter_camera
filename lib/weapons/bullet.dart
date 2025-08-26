@@ -14,9 +14,9 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
     required this.speed,
   }) : super(
          position: position,
-         size: Vector2(5, 52),
+         size: Vector2(28, 15),
          anchor: Anchor.center,
-         angle: angle + 3 * pi / 2,
+         angle: angle + 0,
        ) {
     _direction.setValues(cos(angle), sin(angle));
   }
@@ -24,7 +24,7 @@ class Bullet extends SpriteComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    sprite = await Sprite.load('laserthin.png');
+    sprite = await Sprite.load('laserPointy.png');
     add(CircleHitbox());
   }
 

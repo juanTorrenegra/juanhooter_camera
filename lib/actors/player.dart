@@ -9,14 +9,14 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   Player({required Sprite sprite, required Vector2 position})
     : super(
         position: position,
-        size: Vector2.all(30),
+        size: Vector2.all(28),
         anchor: Anchor.center,
         sprite: sprite,
         priority: 8,
       );
 
   //double _baseSpeed = 80;
-  double _currentSpeed = 80;
+  double _currentSpeed = 110;
   bool isFastMode = false;
   double _angle = 0;
 
@@ -60,7 +60,8 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       10.0, // Offset adicional desde el borde
     );
 
-    final bullet = Bullet(position: shootPosition, angle: angle, speed: 150);
+    final bullet = Bullet(position: shootPosition, angle: angle, speed: 100);
     game.universo.add(bullet);
+    game.pool.start();
   }
 }

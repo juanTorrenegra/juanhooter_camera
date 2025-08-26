@@ -25,6 +25,7 @@ class Turret extends SpriteComponent with HasGameReference<MyGame> {
          sprite: sprite,
          size: size ?? Vector2(30, 30),
          anchor: Anchor.center,
+         priority: 1,
        );
 
   void updateTurret(

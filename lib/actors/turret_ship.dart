@@ -50,6 +50,7 @@ class TurretShip extends RangedEnemy {
     // Añadir torretas basadas en la configuración
     if (turretConfigs != null) {
       for (final config in turretConfigs!) {
+        print('Cargando torreta en posición: ${config.relativePosition}');
         final turret = Turret(
           sprite: await Sprite.load(config.spritePath),
           relativePosition: config.relativePosition,
@@ -61,8 +62,10 @@ class TurretShip extends RangedEnemy {
         );
         turrets.add(turret);
         add(turret);
+        print('Torreta añadida: ${turret.isMounted}');
       }
     }
+    print('Total torretas montadas: ${turrets.length}');
   }
 
   @override
