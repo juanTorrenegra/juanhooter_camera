@@ -4,10 +4,6 @@ import 'package:flutter/widgets.dart';
 import 'package:juanshooter/game.dart';
 import 'package:flutter/services.dart'; //landscape mode
 
-//void main() {
-//  runApp(GameWidget(game: MyGame()));
-//}
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
