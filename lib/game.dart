@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
@@ -7,10 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/actors/ranged_enemy.dart';
-import 'package:juanshooter/actors/turret.dart';
 import 'package:juanshooter/actors/turret_ship.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:juanshooter/hud/game_hud.dart';
-import 'package:juanshooter/weapons/bullet.dart';
 import 'package:flame_audio/flame_audio.dart';
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
 // juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
@@ -21,7 +22,7 @@ class MyGame extends FlameGame
     with HasGameReference<MyGame>, HasCollisionDetection {
   late final Player player;
   late final TurretShip mineroTorretas;
-  late final TurretShip enemigo1;
+  late final RangedEnemy enemigo1;
   late final Enemigo enemigo2;
   late final Enemigo enemigo3;
   late final Enemigo enemigo4;
@@ -107,13 +108,14 @@ class MyGame extends FlameGame
     );
     universo.add(mineroTorretas);
 
-    enemigo1 = TurretShip(
+    enemigo1 = RangedEnemy(
       sprite: await Sprite.load('9B.png'), //IZQUIERDA
       position: Vector2(100, 300),
       size: Vector2(140, 220),
       maxHitPoints: 4,
       rotationSpeed: 0.4,
       bulletSpeed: 100,
+      shootingThreshold: 30,
     );
     universo.add(enemigo1);
 
@@ -237,23 +239,9 @@ class MyGame extends FlameGame
   void onGameResize(Vector2 size) {
     debugPrint('4. onGameResize (camera is $camara)');
     super.onGameResize(size);
+
+    debugPrint("🔄 onGameResize - Tamaño: $size ");
   }
-}
-
-// calcular posicion inicial del disparo
-Vector2 calculateShootPosition(
-  Vector2 entityPosition,
-  double angle,
-  Vector2 entitySize,
-  double offsetDistance,
-) {
-  // Calcula el punto frente al sprite basado en el ángulo y tamaño
-  final offset = Vector2(
-    cos(angle) * (entitySize.x / 2 + offsetDistance),
-    sin(angle) * (entitySize.y / 2 + offsetDistance),
-  );
-
-  return entityPosition + offset;
 }
 
 void startBgmMusic() {

@@ -1,4 +1,5 @@
 import 'package:flame/components.dart';
+import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/game.dart'; // Importa tu archivo game.dart
@@ -9,6 +10,8 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final JoystickComponent lookJoystick;
   late final HudButtonComponent shootButton;
   late final HudButtonComponent fastButton;
+  late final HudButtonComponent landscapeOrientationLeft;
+  late final HudButtonComponent landscapeOrientationRight;
 
   @override
   Future<void> onLoad() async {
@@ -74,8 +77,44 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       ),
       onPressed: () => game.fast(),
     );
+    landscapeOrientationLeft = HudButtonComponent(
+      button: TextComponent(
+        text: String.fromCharCode(Icons.screen_rotation.codePoint),
+        textRenderer: TextPaint(
+          style: TextStyle(
+            fontSize: 24,
+            fontFamily: Icons.screen_rotation.fontFamily,
+            package: Icons.screen_rotation.fontPackage,
+            color: Colors.green,
+          ),
+        ),
+      ),
+      margin: const EdgeInsets.only(left: 20, top: 20),
+      onPressed: () {
+        Flame.device.setLandscapeLeftOnly();
+      },
+    );
+    landscapeOrientationRight = HudButtonComponent(
+      button: TextComponent(
+        text: String.fromCharCode(Icons.screen_rotation.codePoint),
+        textRenderer: TextPaint(
+          style: TextStyle(
+            fontSize: 24,
+            fontFamily: Icons.screen_rotation.fontFamily,
+            package: Icons.screen_rotation.fontPackage,
+            color: Colors.yellowAccent,
+          ),
+        ),
+      ),
+      margin: const EdgeInsets.only(left: 50, top: 20),
+      onPressed: () {
+        Flame.device.setLandscapeRightOnly();
+      },
+    );
 
     // Añadir componentes al HUD
+    add(landscapeOrientationRight);
+    add(landscapeOrientationLeft);
     add(movementJoystick);
     add(lookJoystick);
     add(shootButton);

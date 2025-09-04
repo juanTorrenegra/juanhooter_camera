@@ -4,6 +4,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:juanshooter/game.dart';
 import 'package:juanshooter/weapons/bullet.dart';
+import 'package:juanshooter/utils/game_utils.dart';
 
 class Player extends SpriteComponent with HasGameReference<MyGame> {
   Player({required Sprite sprite, required Vector2 position})
