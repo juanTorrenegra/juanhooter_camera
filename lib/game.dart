@@ -10,7 +10,6 @@ import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/actors/ranged_enemy.dart';
 import 'package:juanshooter/actors/turret_ship.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:flame_audio/flame_audio.dart';
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
