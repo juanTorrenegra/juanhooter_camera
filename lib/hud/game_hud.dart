@@ -10,8 +10,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final JoystickComponent lookJoystick;
   late final HudButtonComponent shootButton;
   late final HudButtonComponent fastButton;
-  late final HudButtonComponent landscapeOrientationLeft;
-  late final HudButtonComponent landscapeOrientationRight;
+  late final HudButtonComponent menu;
 
   @override
   Future<void> onLoad() async {
@@ -64,7 +63,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     fastButton = HudButtonComponent(
       button: CircleComponent(
         radius: 20,
-        paint: Paint()..color = Colors.red.shade900,
+        paint: Paint()..color = Colors.cyan,
         children: [
           TextComponent(
             position: Vector2(6, 12),
@@ -77,44 +76,26 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       ),
       onPressed: () => game.fast(),
     );
-    landscapeOrientationLeft = HudButtonComponent(
+
+    menu = HudButtonComponent(
       button: TextComponent(
-        text: String.fromCharCode(Icons.screen_rotation.codePoint),
+        text: String.fromCharCode(Icons.airplay_sharp.codePoint),
         textRenderer: TextPaint(
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 60,
             fontFamily: Icons.screen_rotation.fontFamily,
             package: Icons.screen_rotation.fontPackage,
-            color: Colors.green,
+            color: Colors.cyanAccent,
           ),
         ),
       ),
-      margin: const EdgeInsets.only(left: 20, top: 20),
       onPressed: () {
-        Flame.device.setLandscapeLeftOnly();
-      },
-    );
-    landscapeOrientationRight = HudButtonComponent(
-      button: TextComponent(
-        text: String.fromCharCode(Icons.screen_rotation.codePoint),
-        textRenderer: TextPaint(
-          style: TextStyle(
-            fontSize: 24,
-            fontFamily: Icons.screen_rotation.fontFamily,
-            package: Icons.screen_rotation.fontPackage,
-            color: Colors.yellowAccent,
-          ),
-        ),
-      ),
-      margin: const EdgeInsets.only(left: 50, top: 20),
-      onPressed: () {
-        Flame.device.setLandscapeRightOnly();
+        game.overlays.add("MainMenu");
       },
     );
 
     // Añadir componentes al HUD
-    add(landscapeOrientationRight);
-    add(landscapeOrientationLeft);
+    add(menu);
     add(movementJoystick);
     add(lookJoystick);
     add(shootButton);
@@ -153,6 +134,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         margin,
       );
       fastButton.position = Vector2(margin, margin);
+      menu.position = Vector2(game.size.x / 2 - 30, game.size.y - margin);
     }
   }
 }

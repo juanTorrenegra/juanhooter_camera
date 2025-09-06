@@ -19,6 +19,8 @@ import 'package:flame_audio/flame_audio.dart';
 
 class MyGame extends FlameGame
     with HasGameReference<MyGame>, HasCollisionDetection {
+  MyGame();
+
   late final Player player;
   late final TurretShip mineroTorretas;
   late final RangedEnemy enemigo1;
@@ -78,7 +80,7 @@ class MyGame extends FlameGame
 
     player = Player(
       sprite: await Sprite.load('ship.png'), // SIMULAR RELOAD LASERS
-      position: Vector2(400, 400),
+      position: Vector2(650, 400),
     );
     universo.add(player);
 
