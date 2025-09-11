@@ -17,7 +17,7 @@ void main() {
       GameWidget<MyGame>.controlled(
         gameFactory: MyGame.new,
         overlayBuilderMap: {
-          'MainMenu': (_, game) => MainMenu(game: game),
+          'MainMenu': (_, game) => VisorOverlay(game: game),
           //'GameOver': (_, game) => GameOver(game: game),
         },
         initialActiveOverlays: const ['MainMenu'],
