@@ -25,12 +25,11 @@ class VisorOverlay extends StatelessWidget {
           ),
           Positioned.fill(
             child: ClipRect(
-              // BackdropFilter necesita un ClipRect como padre
               child: BackdropFilter(
                 filter: ImageFilter.blur(
                   sigmaX: 5.0,
-                  sigmaY: 5.0,
-                ), // Intensidad del blur
+                  sigmaY: 5.0, // Intensidad del blur
+                ),
                 child: Container(
                   color: Colors
                       .transparent, // Contenedor vacío, solo importa el filtro
@@ -38,21 +37,15 @@ class VisorOverlay extends StatelessWidget {
               ),
             ),
           ),
-          // 1) -- El fondo con estrellas y el juego se ve a través de la transparencia --
-          // (Tu juego ya está aquí de fondo, por eso el color transparente)
 
           // 2) -- Nuestro visor espacial dibujado encima --
-          CustomPaint(
-            painter: VisorPainter(), // Esta es la clase que hace toda la magia
-            size: Size.infinite, // Que ocupe toda la pantalla
-          ),
+          CustomPaint(painter: VisorPainter(), size: Size.infinite),
 
           // 3) -- Los botones y otros widgets de interfaz encima del visor --
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ... Tus botones animados con SimpleAnimations aquí ...
                 Text(
                   'MENU PRINCIPAL',
                   style: TextStyle(color: Colors.cyan, fontSize: 24),
@@ -151,7 +144,7 @@ class VisorOverlay extends StatelessWidget {
 }
 
 // --------------------------------------------------------
-// LA CLASE QUE DIBUJA EL VISOR - Aquí está la magia
+// LA CLASE QUE DIBUJA EL VISOR
 // --------------------------------------------------------
 class VisorPainter extends CustomPainter {
   @override
@@ -161,22 +154,20 @@ class VisorPainter extends CustomPainter {
     final maxRadiusB2 = size.width * 0.32;
 
     // -- 2. Borde del visor: Gradiente circular cyan que se difumina --
-    final gradient = SweepGradient(
-      colors: [Colors.cyan, Colors.transparent],
-      stops: [0.7, 1.0],
-    );
-    final shader = gradient.createShader(
-      Rect.fromCircle(center: center, radius: maxRadius),
-    );
+    //final gradient = SweepGradient(
+    //  colors: [Colors.cyan, Colors.transparent],
+    //  stops: [0.7, 1.0],
+    //);
+    //final shader = gradient.createShader(
+    //  Rect.fromCircle(center: center, radius: maxRadius),
+    //); efecto loading, gradiente circular- shader below
 
     final borderPaint = Paint()
-      ..shader = shader
+      //..shader = shader
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
-      ..maskFilter = const MaskFilter.blur(
-        BlurStyle.normal,
-        10.0,
-      ); // Efecto GLOW/Blur
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 21.0
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
 
     canvas.drawCircle(center, maxRadius, borderPaint);
 
@@ -235,16 +226,16 @@ class VisorPainter extends CustomPainter {
       canvas.drawLine(start, end, crosshairPaint);
     }
 
-    canvas.drawLine(
-      const Offset(110, 30),
-      Offset(center.dx - 100, center.dy - 50),
-      glowPaint, // Usamos la pintura de glow primero
-    );
-    canvas.drawLine(
-      Offset(size.width - 110, 30),
-      Offset(center.dx + 100, center.dy - 50),
-      glowPaint,
-    );
+    //canvas.drawLine(
+    //  const Offset(110, 30),
+    //  Offset(center.dx - 100, center.dy - 50),
+    //  glowPaint,
+    //);
+    //canvas.drawLine(
+    //  Offset(size.width - 110, 30),
+    //  Offset(center.dx + 100, center.dy - 50),
+    //  glowPaint,
+    //);
 
     // -- 5. Líneas diagonales de "conexión" futuristas --
     // (Podrías animar estas líneas con SimpleAnimations!)
@@ -254,16 +245,16 @@ class VisorPainter extends CustomPainter {
       ..strokeWidth = 1.0
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawLine(
-      const Offset(110, 30),
-      Offset(center.dx - 100, center.dy - 50),
-      linePaint,
-    );
-    canvas.drawLine(
-      Offset(size.width - 110, 30),
-      Offset(center.dx + 100, center.dy - 50),
-      linePaint,
-    );
+    //canvas.drawLine(
+    //  const Offset(110, 30),
+    //  Offset(center.dx - 100, center.dy - 50),
+    //  linePaint,
+    //);
+    //canvas.drawLine(
+    //  Offset(size.width - 110, 30),
+    //  Offset(center.dx + 100, center.dy - 50),
+    //  linePaint,
+    //);
     for (double angle = 0; angle < 360; angle += 1) {
       double radians = angle * (3.14159 / 180.0);
       // Calcula el punto en el borde del círculo
@@ -278,6 +269,87 @@ class VisorPainter extends CustomPainter {
       );
       canvas.drawLine(start, end, crosshairPaintAlpha);
     }
+    final helmetPaint = Paint()
+      ..color = Colors.cyan
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5
+      ..strokeCap = StrokeCap.round;
+    final helmetGlowPaint = Paint()
+      ..color = Colors.cyan
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0)
+      ..strokeCap = StrokeCap.round;
+
+    // 2. Calcular puntos clave para la "M" izquierda
+    // (Ajusta estos valores según cómo quieras que se vea)
+    double margin = 30; // Margen desde el borde de la pantalla
+    double sectionHeight = size.height / 2; // Altura de cada "pico" de la M
+
+    //Offset start = Offset(margin, margin + sectionHeight);
+    //Offset peak1 = Offset(margin + 15, margin);
+    //Offset valley1 = Offset(margin + 30, margin + sectionHeight);
+    //Offset peak2 = Offset(margin + 45, margin);
+    //Offset end = Offset(margin + 60, margin + sectionHeight);
+
+    // Espejamos los puntos en el eje X restando de 'size.width'
+    Path helmetPathRight = Path(); //oreja derecha
+    helmetPathRight.moveTo(size.width - 260, 110);
+    helmetPathRight.lineTo(size.width - 150, 20);
+    helmetPathRight.lineTo(size.width - 35, 20);
+    helmetPathRight.lineTo(size.width - 10, 50);
+    helmetPathRight.lineTo(size.width - 10, 125);
+    helmetPathRight.lineTo(size.width - 75, 180);
+    //canvas.drawPath(helmetPathRight, helmetGlowPaint);
+    canvas.drawPath(helmetPathRight, helmetPaint);
+
+    Path helmetPath = Path();
+    helmetPath.moveTo(260, 110); // Posicionar el "lápiz" en el start
+    helmetPath.lineTo(150, 20); //línea hasta el primer pico
+    helmetPath.lineTo(35, 20); // Bajar al primer valle
+    helmetPath.lineTo(10, 50); // Subir al segundo pico
+    helmetPath.lineTo(10, 125); // Bajar al punto final
+    helmetPath.lineTo(75, 180);
+    //canvas.drawPath(helmetPath, helmetGlowPaint);
+    canvas.drawPath(helmetPath, helmetPaint);
+
+    Path earlineRight = Path();
+    earlineRight.moveTo(290, 80);
+    earlineRight.lineTo(270, 60);
+    earlineRight.lineTo(50, 60);
+    earlineRight.lineTo(0, 10);
+    //canvas.drawPath(earlineRight, helmetGlowPaint);
+    canvas.drawPath(earlineRight, helmetPaint);
+
+    Path earlineLeft = Path();
+    earlineLeft.moveTo(size.width - 290, 80);
+    earlineLeft.lineTo(size.width - 270, 60);
+    earlineLeft.lineTo(size.width - 50, 60);
+    earlineLeft.lineTo(size.width - 0, 10);
+    //canvas.drawPath(earlineRight, helmetGlowPaint);
+    canvas.drawPath(earlineLeft, helmetPaint);
+
+    Path lowerearLeft = Path();
+    lowerearLeft.moveTo(30, 210);
+    lowerearLeft.lineTo(30, 260);
+    lowerearLeft.lineTo(10, 285);
+    lowerearLeft.lineTo(10, 340);
+    lowerearLeft.lineTo(45, 380);
+    lowerearLeft.lineTo(180, 380);
+    lowerearLeft.lineTo(280, 300);
+    //canvas.drawPath(lowerearLeft, helmetGlowPaint);
+    canvas.drawPath(lowerearLeft, helmetPaint);
+
+    Path lowerearRight = Path();
+    lowerearRight.moveTo(size.width - 30, 210);
+    lowerearRight.lineTo(size.width - 30, 260);
+    lowerearRight.lineTo(size.width - 10, 285);
+    lowerearRight.lineTo(size.width - 10, 340);
+    lowerearRight.lineTo(size.width - 45, 380);
+    lowerearRight.lineTo(size.width - 180, 380);
+    lowerearRight.lineTo(size.width - 280, 300);
+    //canvas.drawPath(lowerearRight, helmetGlowPaint);
+    canvas.drawPath(lowerearRight, helmetPaint);
   }
 
   @override
