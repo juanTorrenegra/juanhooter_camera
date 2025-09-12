@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,26 @@ class VisorOverlay extends StatelessWidget {
       color: Colors.transparent, // Fondo completamente transparente
       child: Stack(
         children: [
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xAA000000), //Fondo negro semi-transparente
+            ),
+          ),
+          Positioned.fill(
+            child: ClipRect(
+              // BackdropFilter necesita un ClipRect como padre
+              child: BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: 5.0,
+                  sigmaY: 5.0,
+                ), // Intensidad del blur
+                child: Container(
+                  color: Colors
+                      .transparent, // Contenedor vacío, solo importa el filtro
+                ),
+              ),
+            ),
+          ),
           // 1) -- El fondo con estrellas y el juego se ve a través de la transparencia --
           // (Tu juego ya está aquí de fondo, por eso el color transparente)
 
@@ -136,15 +157,8 @@ class VisorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width * 0.4; // Radio del visor principal
-
-    // -- 1. Fondo del visor: Un negro muy semi-transparente --
-    final backgroundPaint = Paint()
-      ..color = const Color(0xAA000000); // Negro ~66% opaco
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      backgroundPaint,
-    );
+    final maxRadius = size.width * 0.19; // Radio del visor principal
+    final maxRadiusB2 = size.width * 0.32;
 
     // -- 2. Borde del visor: Gradiente circular cyan que se difumina --
     final gradient = SweepGradient(
@@ -169,11 +183,23 @@ class VisorPainter extends CustomPainter {
     // -- 3. Cruz de mira en el centro (simulando un telescopio) --
     final crosshairPaint = Paint()
       ..color = Colors.cyan
-      ..strokeWidth = 2.0
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    final crosshairPaintAlpha = Paint()
+      ..color = Colors.cyan.withValues(alpha: 0.4)
+      ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 
+    final glowPaint =
+        Paint() // GLOW (la sombra borrosa cyan)
+          ..color = Colors.cyan
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4.0
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
+
     // Líneas horizontales y verticales
-    double crosshairSize = 20.0;
+    double crosshairSize = 30.0;
     canvas.drawLine(
       Offset(center.dx - crosshairSize, center.dy),
       Offset(center.dx + crosshairSize, center.dy),
@@ -188,9 +214,13 @@ class VisorPainter extends CustomPainter {
     // Círculo de la mira
     canvas.drawCircle(center, crosshairSize / 2, crosshairPaint);
 
+    canvas.drawCircle(center, 320 / 2, glowPaint);
+    canvas.drawCircle(center, 320 / 2, crosshairPaint);
+    canvas.drawCircle(center, 310 / 2, crosshairPaint);
+
     // -- 4. "Medidores" o marcadores alrededor del borde --
     // Por ejemplo, marcas de grado cada 30 grados
-    for (double angle = 0; angle < 360; angle += 30) {
+    for (double angle = 0; angle < 360; angle += 15) {
       double radians = angle * (3.14159 / 180.0);
       // Calcula el punto en el borde del círculo
       Offset start = Offset(
@@ -199,29 +229,55 @@ class VisorPainter extends CustomPainter {
       );
       // Calcula un punto un poco hacia adentro para la marca
       Offset end = Offset(
-        center.dx + (maxRadius - 15) * cos(radians),
-        center.dy + (maxRadius - 15) * sin(radians),
+        center.dx + (maxRadius - 11) * cos(radians),
+        center.dy + (maxRadius - 11) * sin(radians),
       );
       canvas.drawLine(start, end, crosshairPaint);
     }
 
+    canvas.drawLine(
+      const Offset(110, 30),
+      Offset(center.dx - 100, center.dy - 50),
+      glowPaint, // Usamos la pintura de glow primero
+    );
+    canvas.drawLine(
+      Offset(size.width - 110, 30),
+      Offset(center.dx + 100, center.dy - 50),
+      glowPaint,
+    );
+
     // -- 5. Líneas diagonales de "conexión" futuristas --
     // (Podrías animar estas líneas con SimpleAnimations!)
     final linePaint = Paint()
-      ..color = Colors.cyan.withValues(alpha: .5)
-      ..strokeWidth = 1.0;
+      ..color = Colors.white
+          .withValues(alpha: .5) // Colors.cyan.withValues(alpha: .5)
+      ..strokeWidth = 1.0
+      ..strokeCap = StrokeCap.round;
 
     canvas.drawLine(
-      const Offset(50, 50),
-      Offset(center.dx - 50, center.dy - 50),
+      const Offset(110, 30),
+      Offset(center.dx - 100, center.dy - 50),
       linePaint,
     );
     canvas.drawLine(
-      Offset(size.width - 50, 50),
-      Offset(center.dx + 50, center.dy - 50),
+      Offset(size.width - 110, 30),
+      Offset(center.dx + 100, center.dy - 50),
       linePaint,
     );
-    // ... y así sucesivamente ...
+    for (double angle = 0; angle < 360; angle += 1) {
+      double radians = angle * (3.14159 / 180.0);
+      // Calcula el punto en el borde del círculo
+      Offset start = Offset(
+        center.dx + maxRadiusB2 * cos(radians),
+        center.dy + maxRadiusB2 * sin(radians),
+      );
+      // Calcula un punto un poco hacia adentro para la marca
+      Offset end = Offset(
+        center.dx + (maxRadiusB2 - 10) * cos(radians),
+        center.dy + (maxRadiusB2 - 10) * sin(radians),
+      );
+      canvas.drawLine(start, end, crosshairPaintAlpha);
+    }
   }
 
   @override

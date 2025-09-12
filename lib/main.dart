@@ -8,20 +8,23 @@ import 'package:juanshooter/overlays/main_menu.dart'; //landscape mode
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  Flame.device.setLandscapeRightOnly();
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]).then((_) {
-    runApp(
-      GameWidget<MyGame>.controlled(
-        gameFactory: MyGame.new,
-        overlayBuilderMap: {
-          'MainMenu': (_, game) => VisorOverlay(game: game),
-          //'GameOver': (_, game) => GameOver(game: game),
-        },
-        initialActiveOverlays: const ['MainMenu'],
-      ),
-    );
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky).then((_) {
+    Flame.device.setLandscapeRightOnly();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]).then((_) {
+      runApp(
+        GameWidget<MyGame>.controlled(
+          gameFactory: MyGame.new,
+          overlayBuilderMap: {
+            'MainMenu': (_, game) => VisorOverlay(game: game),
+            //'GameOver': (_, game) => GameOver(game: game),
+          },
+          initialActiveOverlays: const ['MainMenu'],
+        ),
+      );
+    });
   });
 }
