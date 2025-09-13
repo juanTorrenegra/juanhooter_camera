@@ -28,6 +28,7 @@ class RangedEnemy extends Enemigo {
   double _targetAngle = 0;
   final double _shootingThreshold; // ✅ Margen de 10 grados para disparar
   final double _shootingOffset; // ✅ Nuevo parámetro para offset de disparo
+  final int _damage;
 
   RangedEnemy({
     required Sprite sprite,
@@ -43,11 +44,13 @@ class RangedEnemy extends Enemigo {
     double bulletSpeed = 250,
     double shootingThreshold = 10.0, //Grados de margen (10 por defecto)
     double shootingOffset = 15.0, // offset por defecto de 15.0
+    int damage = 1,
   }) : _shootInterval = shootInterval,
        _bulletSpeed = bulletSpeed,
        _shootingThreshold =
            shootingThreshold * pi / 180, // Convierte a radianes
        _shootingOffset = shootingOffset, // ✅ Asigna el offset
+       _damage = damage,
        super(
          sprite: sprite,
          position: position,
@@ -82,7 +85,6 @@ class RangedEnemy extends Enemigo {
   void onUpdateBehavior(double dt) {
     if (_isAiming) {
       _followPlayer(dt);
-      //_handleShooting(dt);
       _checkShootingPosition(); // ✅ Verificar si está en posición de disparar
       if (_isInShootingPosition) {
         _handleShooting(dt); // ✅ Solo disparar si está en posición
@@ -146,24 +148,9 @@ class RangedEnemy extends Enemigo {
       position: shootPosition,
       angle: angle,
       speed: _bulletSpeed,
+      damage: _damage, //pasa el daño a la bala
     );
 
     game.universo.add(bullet);
   }
-
-  // Opcional: Resetear posición de disparo si el player se mueve mucho
-  //void _updateTargetIfNeeded() {
-  //  if (_isInShootingPosition && game.player.isMounted) {
-  //    final newDirection = game.player.position - position;
-  //    final newTargetAngle = atan2(newDirection.y, newDirection.x);
-  //
-  //    final angleDifference = _getAngleDifference(_targetAngle, newTargetAngle);
-  //
-  //    // Si el player se movió más de 20 grados, resetear
-  //    if (angleDifference.abs() > (20 * pi / 180)) {
-  //      _targetAngle = newTargetAngle;
-  //      _isInShootingPosition = false;
-  //      print('Player se movió, reajustando objetivo...');
-  //    }
-  //  }
 }

@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/actors/ranged_enemy.dart';
-import 'package:juanshooter/actors/turret_ship.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:flame_audio/flame_audio.dart';
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
@@ -22,7 +21,7 @@ class MyGame extends FlameGame
   MyGame();
 
   late final Player player;
-  late final TurretShip mineroTorretas;
+  late final RangedEnemy mineroTorretas;
   late final RangedEnemy enemigo1;
   late final Enemigo enemigo2;
   late final Enemigo enemigo3;
@@ -34,6 +33,7 @@ class MyGame extends FlameGame
   CameraComponent? camara;
   Vector2 currentPlayerPos = Vector2.zero();
   late AudioPool pool;
+  double timeScale = 1.0;
 
   void fast() {
     // Llama al método del player
@@ -73,41 +73,32 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('ship.png'), // SIMULAR RELOAD LASERS
       position: Vector2(380, 380),
     );
+    player.maxHitPoints = 10;
+    player.currentHitPoints = 10;
     universo.add(player);
 
-    mineroTorretas = TurretShip(
+    mineroTorretas = RangedEnemy(
       sprite: await Sprite.load('5.png'), //MINERO
-      position: Vector2(100, 50),
+      position: Vector2(100, 100),
       size: Vector2(530, 300),
-      rotationSpeed: 0.5,
-      shootInterval: 2.0,
-      bulletSpeed: 150,
-      shootingThreshold: 10,
-      turretConfigs: [
-        TurretConfig(
-          spritePath: 'ship.png',
-          relativePosition: Vector2(50, 0), // Torreta a la derecha
-          rotationSpeed: 2.0,
-          size: Vector2(30, 30),
-        ),
-        TurretConfig(
-          spritePath: 'ship.png',
-          relativePosition: Vector2(-50, -50), // Torreta a la izquierda
-          rotationSpeed: 2.0,
-          size: Vector2(30, 30),
-        ),
-      ],
+      maxHitPoints: 4,
+      rotationSpeed: 0.4,
+      bulletSpeed: 100,
+      shootingThreshold: 30,
+      damage: 2,
     );
+
     universo.add(mineroTorretas);
 
     enemigo1 = RangedEnemy(
       sprite: await Sprite.load('9B.png'), //IZQUIERDA
-      position: Vector2(100, 300),
+      position: Vector2(100, 400),
       size: Vector2(140, 220),
       maxHitPoints: 4,
       rotationSpeed: 0.4,
       bulletSpeed: 100,
       shootingThreshold: 30,
+      damage: 2,
     );
     universo.add(enemigo1);
 
@@ -124,6 +115,7 @@ class MyGame extends FlameGame
     enemigo3 = RangedEnemy(
       sprite: await Sprite.load('3B.png'), //derecha
       position: Vector2(550, 400),
+      rotationSpeed: 4.0,
       //size: Vector2(150, 220),
     );
     universo.add(enemigo3);
@@ -153,6 +145,7 @@ class MyGame extends FlameGame
   @override
   void update(double dt) {
     super.update(dt);
+    super.update(dt * timeScale);
     // Actualizar posición de depuración
     currentPlayerPos.setFrom(player.position);
   }
