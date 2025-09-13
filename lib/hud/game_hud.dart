@@ -1,9 +1,8 @@
 import 'package:flame/components.dart';
-import 'package:flame/flame.dart';
+
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/game.dart'; // Importa tu archivo game.dart
-import 'package:juanshooter/actors/player.dart';
 
 class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final JoystickComponent movementJoystick;
@@ -11,6 +10,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final HudButtonComponent shootButton;
   late final HudButtonComponent fastButton;
   late final HudButtonComponent menu;
+  late final CustomPainterComponent hudVisor;
 
   @override
   Future<void> onLoad() async {

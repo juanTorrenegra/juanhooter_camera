@@ -39,7 +39,7 @@ class VisorOverlay extends StatelessWidget {
           ),
 
           // 2) -- Nuestro visor espacial dibujado encima --
-          CustomPaint(painter: VisorPainter(), size: Size.infinite),
+          CustomPaint(painter: MenuPainter(), size: Size.infinite),
 
           // 3) -- Los botones y otros widgets de interfaz encima del visor --
           Center(
@@ -59,6 +59,7 @@ class VisorOverlay extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     game.overlays.remove('MainMenu');
+                    game.overlays.add("HudDecoration");
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.withValues(alpha: .2),
@@ -145,7 +146,7 @@ class VisorOverlay extends StatelessWidget {
 // --------------------------------------------------------
 // LA CLASE QUE DIBUJA EL VISOR
 // --------------------------------------------------------
-class VisorPainter extends CustomPainter {
+class MenuPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -225,35 +226,6 @@ class VisorPainter extends CustomPainter {
       canvas.drawLine(start, end, crosshairPaint);
     }
 
-    //canvas.drawLine(
-    //  const Offset(110, 30),
-    //  Offset(center.dx - 100, center.dy - 50),
-    //  glowPaint,
-    //);
-    //canvas.drawLine(
-    //  Offset(size.width - 110, 30),
-    //  Offset(center.dx + 100, center.dy - 50),
-    //  glowPaint,
-    //);
-
-    // -- 5. Líneas diagonales de "conexión" futuristas --
-    // (Podrías animar estas líneas con SimpleAnimations!)
-    final linePaint = Paint()
-      ..color = Colors.white
-          .withValues(alpha: .5) // Colors.cyan.withValues(alpha: .5)
-      ..strokeWidth = 1.0
-      ..strokeCap = StrokeCap.round;
-
-    //canvas.drawLine(
-    //  const Offset(110, 30),
-    //  Offset(center.dx - 100, center.dy - 50),
-    //  linePaint,
-    //);
-    //canvas.drawLine(
-    //  Offset(size.width - 110, 30),
-    //  Offset(center.dx + 100, center.dy - 50),
-    //  linePaint,
-    //);
     for (double angle = 0; angle < 360; angle += 1) {
       double radians = angle * (3.14159 / 180.0);
       // Calcula el punto en el borde del círculo
@@ -279,17 +251,6 @@ class VisorPainter extends CustomPainter {
       ..strokeWidth = 2.0
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0)
       ..strokeCap = StrokeCap.round;
-
-    // 2. Calcular puntos clave para la "M" izquierda
-    // (Ajusta estos valores según cómo quieras que se vea)
-    double margin = 30; // Margen desde el borde de la pantalla
-    double sectionHeight = size.height / 2; // Altura de cada "pico" de la M
-
-    //Offset start = Offset(margin, margin + sectionHeight);
-    //Offset peak1 = Offset(margin + 15, margin);
-    //Offset valley1 = Offset(margin + 30, margin + sectionHeight);
-    //Offset peak2 = Offset(margin + 45, margin);
-    //Offset end = Offset(margin + 60, margin + sectionHeight);
 
     // Espejamos los puntos en el eje X restando de 'size.width'
     Path helmetPathRight = Path(); //oreja derecha

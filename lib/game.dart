@@ -28,16 +28,7 @@ class MyGame extends FlameGame
   late final Enemigo enemigo3;
   late final Enemigo enemigo4;
   late final Enemigo enemigo5;
-  late final Enemigo enemigo6;
-  late final Enemigo enemigo7;
-  late final Enemigo enemigo8;
-  late final Enemigo enemigo9;
-  late final Enemigo enemigo10;
-  late final Enemigo enemigo11;
-  late final Enemigo enemigo12;
-  late final Enemigo enemigo13;
-  late final Enemigo enemigo14;
-  late final Enemigo enemigo15;
+
   late final GameHud hud;
   late final World universo;
   CameraComponent? camara;
@@ -150,76 +141,6 @@ class MyGame extends FlameGame
       //size: Vector2(134, 199),
     );
     universo.add(enemigo5);
-
-    enemigo6 = RangedEnemy(
-      sprite: await Sprite.load('8B.png'),
-      position: Vector2(1050, 550),
-      //size: Vector2(182, 232),
-    );
-    universo.add(enemigo6);
-
-    enemigo7 = RangedEnemy(
-      sprite: await Sprite.load('4B.png'),
-      position: Vector2(1300, 650),
-      //size: Vector2(130, 185),
-    );
-    universo.add(enemigo7);
-
-    enemigo8 = RangedEnemy(
-      sprite: await Sprite.load('12.png'),
-      position: Vector2(1450, 600),
-      //size: Vector2(342, 122),
-    );
-    universo.add(enemigo8);
-
-    enemigo9 = RangedEnemy(
-      sprite: await Sprite.load('4.png'),
-      position: Vector2(1600, 600),
-      //size: Vector2(120, 185),
-    );
-    universo.add(enemigo9);
-
-    enemigo10 = RangedEnemy(
-      sprite: await Sprite.load('13B.png'),
-      position: Vector2(1750, 600),
-      //size: Vector2(168, 104),
-    );
-    universo.add(enemigo10);
-
-    enemigo11 = RangedEnemy(
-      sprite: await Sprite.load('5B.png'),
-      position: Vector2(1950, 600),
-      //size: Vector2(98, 171),
-    );
-    universo.add(enemigo11);
-
-    enemigo12 = RangedEnemy(
-      sprite: await Sprite.load('6B.png'),
-      position: Vector2(1450, 800),
-      //size: Vector2(170, 102),
-    );
-    universo.add(enemigo12);
-
-    enemigo13 = RangedEnemy(
-      sprite: await Sprite.load('5.png'),
-      position: Vector2(1600, 700),
-      // size: Vector2(98, 171),
-    );
-    universo.add(enemigo13);
-
-    enemigo14 = RangedEnemy(
-      sprite: await Sprite.load('1B.png'),
-      position: Vector2(1050, 700),
-      //size: Vector2(124, 135),
-    );
-    universo.add(enemigo14);
-
-    enemigo15 = RangedEnemy(
-      sprite: await Sprite.load('10B.png'),
-      position: Vector2(900, 700),
-      //size: Vector2(116, 110),
-    );
-    universo.add(enemigo15);
 
     hud = GameHud()..priority = 100;
     camara?.viewport.add(hud);
