@@ -4,27 +4,30 @@ import 'package:flame/game.dart';
 import 'package:flutter/widgets.dart';
 import 'package:juanshooter/game.dart';
 import 'package:flutter/services.dart';
-import 'package:juanshooter/overlays/main_menu.dart'; //landscape mode
+import 'package:juanshooter/overlays/main_menu.dart';
+import 'package:juanshooter/utils/game_utils.dart'; //landscape mode
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky).then((_) {
-    Flame.device.setLandscapeRightOnly();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]).then((_) {
-      runApp(
-        GameWidget<MyGame>.controlled(
-          gameFactory: MyGame.new,
-          overlayBuilderMap: {
-            'MainMenu': (_, game) => VisorOverlay(game: game),
-            //'GameOver': (_, game) => GameOver(game: game),
-          },
-          initialActiveOverlays: const ['MainMenu'],
-        ),
-      );
+  FontLoaderUtil.loadAllFontsForTesting().then((_) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky).then((_) {
+      Flame.device.setLandscapeRightOnly();
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]).then((_) {
+        runApp(
+          GameWidget<MyGame>.controlled(
+            gameFactory: MyGame.new,
+            overlayBuilderMap: {
+              'MainMenu': (_, game) => VisorOverlay(game: game),
+              //'GameOver': (_, game) => GameOver(game: game),
+            },
+            initialActiveOverlays: const ['MainMenu'],
+          ),
+        );
+      });
     });
   });
 }

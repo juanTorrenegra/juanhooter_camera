@@ -47,33 +47,36 @@ class VisorOverlay extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'MENU PRINCIPAL',
-                  style: TextStyle(color: Colors.cyan, fontSize: 24),
+                  'DARBALA',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontFamily: "ava",
+                    fontWeight: FontWeight.w400,
+                    fontSize: 90,
+                    letterSpacing: 60,
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     game.overlays.remove('MainMenu');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withValues(alpha: .7),
+                    backgroundColor: Colors.blue.withValues(alpha: .2),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Colors.cyan, width: 2),
+                      horizontal: 80,
+                      vertical: 7,
                     ),
                     elevation: 8,
-                    shadowColor: Colors.blueAccent,
+                    shadowColor: Colors.black,
                   ),
                   child: const Text(
                     'Jugar',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontFamily: "Megatrans",
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: .0,
+                      letterSpacing: 5,
                     ),
                   ),
                 ),
@@ -83,26 +86,24 @@ class VisorOverlay extends StatelessWidget {
                     Flame.device.setLandscapeRightOnly();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withValues(alpha: .7),
+                    backgroundColor: Colors.blue.withValues(alpha: .2),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
+                      horizontal: 25,
+                      vertical: 7,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Colors.cyan, width: 2),
-                    ),
+
                     elevation: 8,
-                    shadowColor: Colors.blueAccent,
+                    shadowColor: Colors.black,
                   ),
 
                   child: const Text(
-                    'Landscape Right',
+                    'Configuracion',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontFamily: "Megatrans",
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: .0,
+                      letterSpacing: 5,
                     ),
                   ),
                 ),
@@ -112,25 +113,23 @@ class VisorOverlay extends StatelessWidget {
                     Flame.device.setLandscapeLeftOnly();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withValues(alpha: .7),
+                    backgroundColor: Colors.blue.withValues(alpha: .2),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
+                      horizontal: 60,
+                      vertical: 7,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Colors.cyan, width: 2),
-                    ),
+
                     elevation: 8,
-                    shadowColor: Colors.blueAccent,
+                    shadowColor: Colors.black,
                   ),
                   child: const Text(
-                    'Landscape Left',
+                    'Creditos',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontFamily: "Megatrans",
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: .0,
+                      letterSpacing: 5,
                     ),
                   ),
                 ),

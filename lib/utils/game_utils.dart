@@ -2,6 +2,8 @@
 import 'dart:math';
 import 'package:flame/game.dart';
 
+import 'package:flutter/services.dart';
+
 // Funciones matemáticas y de utilidad para el juego
 Vector2 calculateShootPosition(
   Vector2 entityPosition,
@@ -40,3 +42,48 @@ double clamp(double value, double min, double max) => value < min
     : value > max
     ? max
     : value;
+
+class FontLoaderUtil {
+  // Función para cargar una fuente desde una ruta de asset y registrarla con un nombre
+  static Future<void> loadAndRegisterFont(
+    String fontFamilyName,
+    String assetPath,
+  ) async {
+    try {
+      // 1. Cargar los bytes de datos de la fuente desde los assets
+      final ByteData fontData = await rootBundle.load(assetPath);
+
+      // 2. Crear un FontLoader con el nombre de familia que quieras usar
+      final FontLoader fontLoader = FontLoader(fontFamilyName);
+
+      // 3. Darle los datos de la fuente al FontLoader
+      fontLoader.addFont(Future.value(fontData));
+
+      // 4. ¡Registrar la fuente! Ahora se puede usar con fontFamily: 'MiNombre'
+      await fontLoader.load();
+
+      print('Fuente cargada exitosamente: $fontFamilyName');
+    } catch (e) {
+      print('Error cargando la fuente $fontFamilyName: $e');
+    }
+  }
+
+  // Función de ejemplo para probar varias fuentes rápidamente
+  static Future<void> loadAllFontsForTesting() async {
+    // Lista de tus fuentes y el nombre que quieres darle
+    Map<String, String> fontsToTest = {
+      'Ava': 'assets/fonts/ava.ttf',
+      'Futuristic1': 'assets/fonts/futuristic1.ttf',
+      'Futuristic2': 'assets/fonts/futuristic2.ttf',
+      'Inclinado': 'assets/fonts/inclinadoFuturistic.ttf',
+      'Megatrans': 'assets/fonts/megatrans.otf',
+      'Ortogonal': 'assets/fonts/ortogonal.otf',
+      'Tintanium': 'assets/fonts/tintanium.ttf',
+    };
+
+    // Cargar cada fuente
+    for (var entry in fontsToTest.entries) {
+      await loadAndRegisterFont(entry.key, entry.value);
+    }
+  }
+}
