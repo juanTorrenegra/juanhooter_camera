@@ -28,6 +28,6 @@ void main() {
           ),
         );
       });
-    });
+    }); //inmmersiveSticky removes celphones nav & status bar
   });
 }

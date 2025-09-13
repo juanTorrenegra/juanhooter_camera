@@ -18,16 +18,16 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       knob: CircleComponent(
         radius: 30,
         paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
+          ..color = Colors.red.withAlpha(150)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
+          ..strokeWidth = 0.3,
       ),
       background: CircleComponent(
         radius: 50,
         paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
+          ..color = Colors.red.withAlpha(150)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
+          ..strokeWidth = 0.3,
       ),
     );
 
@@ -35,16 +35,16 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       knob: CircleComponent(
         radius: 30,
         paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
+          ..color = Colors.red.withAlpha(150)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
+          ..strokeWidth = 0.3,
       ),
       background: CircleComponent(
         radius: 50,
         paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
+          ..color = Colors.red.withAlpha(150)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
+          ..strokeWidth = 0.3,
       ),
     );
 
@@ -52,9 +52,9 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       button: CircleComponent(
         radius: 40,
         paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
+          ..color = Colors.red.withAlpha(150)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
+          ..strokeWidth = 0.3,
       ),
 
       onPressed: () => game.player.shoot(),
@@ -63,7 +63,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     fastButton = HudButtonComponent(
       button: CircleComponent(
         radius: 20,
-        paint: Paint()..color = Colors.cyan,
+        paint: Paint()..color = Colors.red,
         children: [
           TextComponent(
             position: Vector2(6, 12),
@@ -113,7 +113,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   void _positionComponents() {
     // Solo posiciona si los componentes están cargados y el tamaño es válido
     if (isLoaded && game.size.x > 0 && game.size.y > 0) {
-      final margin = 60.0; // Ajusta este valor según necesites
+      final margin = 30.0; // Ajusta este valor según necesites
       final joystickSize = 100.0; // Tamaño del joystick (radio + margen)
 
       // Posiciona el joystick de movimiento (abajo-izquierda)
@@ -129,12 +129,9 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       );
 
       // Posiciona el botón de disparo (arriba-derecha)
-      shootButton.position = Vector2(
-        game.size.x - margin - 40, // 40 = radio del botón
-        margin,
-      );
+      shootButton.position = Vector2(game.size.x - 160, 20);
       fastButton.position = Vector2(margin, margin);
-      menu.position = Vector2(game.size.x / 2 - 30, game.size.y - margin);
+      menu.position = Vector2(game.size.x / 2 - 30, game.size.y - 60);
     }
   }
 }

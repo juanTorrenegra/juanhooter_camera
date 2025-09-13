@@ -52,13 +52,10 @@ class FontLoaderUtil {
     try {
       // 1. Cargar los bytes de datos de la fuente desde los assets
       final ByteData fontData = await rootBundle.load(assetPath);
-
       // 2. Crear un FontLoader con el nombre de familia que quieras usar
       final FontLoader fontLoader = FontLoader(fontFamilyName);
-
       // 3. Darle los datos de la fuente al FontLoader
       fontLoader.addFont(Future.value(fontData));
-
       // 4. ¡Registrar la fuente! Ahora se puede usar con fontFamily: 'MiNombre'
       await fontLoader.load();
 
@@ -70,7 +67,6 @@ class FontLoaderUtil {
 
   // Función de ejemplo para probar varias fuentes rápidamente
   static Future<void> loadAllFontsForTesting() async {
-    // Lista de tus fuentes y el nombre que quieres darle
     Map<String, String> fontsToTest = {
       'Ava': 'assets/fonts/ava.ttf',
       'Futuristic1': 'assets/fonts/futuristic1.ttf',

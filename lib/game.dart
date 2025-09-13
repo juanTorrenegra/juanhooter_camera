@@ -80,7 +80,7 @@ class MyGame extends FlameGame
 
     player = Player(
       sprite: await Sprite.load('ship.png'), // SIMULAR RELOAD LASERS
-      position: Vector2(650, 400),
+      position: Vector2(380, 380),
     );
     universo.add(player);
 
