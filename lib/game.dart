@@ -26,22 +26,6 @@ class MyGame extends FlameGame
   late final Enemigo enemigo2;
   late final Enemigo enemigo3;
   late final Enemigo enemigo4;
-  late final Enemigo enemigo5;
-  late final Enemigo enemigo6;
-  late final Enemigo enemigo7;
-  late final Enemigo enemigo8;
-  late final Enemigo enemigo9;
-  late final Enemigo enemigo10;
-  late final Enemigo enemigo11;
-  late final Enemigo enemigo12;
-  late final Enemigo enemigo13;
-  late final Enemigo enemigo14;
-  late final Enemigo enemigo15;
-  late final Enemigo enemigo16;
-  late final Enemigo enemigo17;
-  late final Enemigo enemigo18;
-  late final Enemigo enemigo19;
-  late final Enemigo enemigo20;
 
   late final GameHud hud;
   late final World universo;
@@ -77,15 +61,15 @@ class MyGame extends FlameGame
     add(camara!);
 
     final background = SpriteComponent(
-      sprite: await Sprite.load('b.png'), //Nebula3.png b.png
-      size: Vector2(3000, 1500),
+      sprite: await Sprite.load('stars3000x1500.png'), //Nebula3.png b.png
+      size: Vector2(6000, 3000),
       anchor: Anchor.topLeft,
       position: Vector2(0, 0),
     )..priority = -100;
     universo.add(background);
 
     player = Player(
-      sprite: await Sprite.load('ship.png'), // SIMULAR RELOAD LASERS
+      sprite: await Sprite.load('ship30x24.png'), // SIMULAR RELOAD LASERS
       position: Vector2(380, 380),
     );
     player.maxHitPoints = 10;
@@ -106,9 +90,9 @@ class MyGame extends FlameGame
     universo.add(mineroTorretas);
 
     enemigo1 = RangedEnemy(
-      sprite: await Sprite.load('9B.png'), //IZQUIERDA
-      position: Vector2(100, 400),
-      size: Vector2(140, 220),
+      sprite: await Sprite.load('bite30x24.png'), //IZQUIERDA
+      position: Vector2(850, 400),
+      size: Vector2(30, 24),
       maxHitPoints: 10,
       rotationSpeed: 3.0,
       bulletSpeed: 100,
@@ -118,9 +102,9 @@ class MyGame extends FlameGame
     universo.add(enemigo1);
 
     enemigo2 = RangedEnemy(
-      sprite: await Sprite.load('11B.png'), //morado
-      position: Vector2(400, 300),
-      //size: Vector2(166, 110),
+      sprite: await Sprite.load('bite30x24.png'), //morado
+      position: Vector2(850, 300),
+      size: Vector2(30, 24),
       maxHitPoints: 10,
       rotationSpeed: 3.0,
       bulletSpeed: 100,
@@ -130,8 +114,9 @@ class MyGame extends FlameGame
     universo.add(enemigo2);
 
     enemigo3 = RangedEnemy(
-      sprite: await Sprite.load('3B.png'), //derecha
-      position: Vector2(550, 400),
+      sprite: await Sprite.load('bite30x24.png'), //derecha
+      position: Vector2(850, 400),
+      size: Vector2(30, 24),
       rotationSpeed: 4.0,
       maxHitPoints: 10,
       bulletSpeed: 100,
@@ -355,3 +340,20 @@ void startBgmMusic() {
 //      damage: 8,
 //    );
 //    universo.add(enemigo20);
+
+//late final Enemigo enemigo5;
+//  late final Enemigo enemigo6;
+//  late final Enemigo enemigo7;
+//  late final Enemigo enemigo8;
+//  late final Enemigo enemigo9;
+//  late final Enemigo enemigo10;
+//  late final Enemigo enemigo11;
+//  late final Enemigo enemigo12;
+//  late final Enemigo enemigo13;
+//  late final Enemigo enemigo14;
+//  late final Enemigo enemigo15;
+//  late final Enemigo enemigo16;
+//  late final Enemigo enemigo17;
+//  late final Enemigo enemigo18;
+//  late final Enemigo enemigo19;
+//  late final Enemigo enemigo20;

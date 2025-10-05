@@ -12,7 +12,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   Player({required Sprite sprite, required Vector2 position})
     : super(
         position: position,
-        size: Vector2.all(28),
+        size: Vector2.all(25),
         anchor: Anchor.center,
         sprite: sprite,
         priority: 8,
