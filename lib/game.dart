@@ -27,6 +27,21 @@ class MyGame extends FlameGame
   late final Enemigo enemigo3;
   late final Enemigo enemigo4;
   late final Enemigo enemigo5;
+  late final Enemigo enemigo6;
+  late final Enemigo enemigo7;
+  late final Enemigo enemigo8;
+  late final Enemigo enemigo9;
+  late final Enemigo enemigo10;
+  late final Enemigo enemigo11;
+  late final Enemigo enemigo12;
+  late final Enemigo enemigo13;
+  late final Enemigo enemigo14;
+  late final Enemigo enemigo15;
+  late final Enemigo enemigo16;
+  late final Enemigo enemigo17;
+  late final Enemigo enemigo18;
+  late final Enemigo enemigo19;
+  late final Enemigo enemigo20;
 
   late final GameHud hud;
   late final World universo;
@@ -81,11 +96,11 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('5.png'), //MINERO
       position: Vector2(100, 100),
       size: Vector2(530, 300),
-      maxHitPoints: 4,
+      maxHitPoints: 550,
       rotationSpeed: 0.4,
       bulletSpeed: 100,
       shootingThreshold: 30,
-      damage: 2,
+      damage: 5,
     );
 
     universo.add(mineroTorretas);
@@ -94,8 +109,8 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('9B.png'), //IZQUIERDA
       position: Vector2(100, 400),
       size: Vector2(140, 220),
-      maxHitPoints: 4,
-      rotationSpeed: 0.4,
+      maxHitPoints: 10,
+      rotationSpeed: 3.0,
       bulletSpeed: 100,
       shootingThreshold: 30,
       damage: 2,
@@ -106,9 +121,11 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('11B.png'), //morado
       position: Vector2(400, 300),
       //size: Vector2(166, 110),
-      rotationSpeed: 0.6,
+      maxHitPoints: 10,
+      rotationSpeed: 3.0,
       bulletSpeed: 100,
       shootingThreshold: 30,
+      damage: 1,
     );
     universo.add(enemigo2);
 
@@ -116,6 +133,10 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('3B.png'), //derecha
       position: Vector2(550, 400),
       rotationSpeed: 4.0,
+      maxHitPoints: 10,
+      bulletSpeed: 100,
+      shootingThreshold: 30,
+      damage: 1,
       //size: Vector2(150, 220),
     );
     universo.add(enemigo3);
@@ -123,16 +144,13 @@ class MyGame extends FlameGame
     enemigo4 = RangedEnemy(
       sprite: await Sprite.load('7B.png'),
       position: Vector2(750, 550),
+      maxHitPoints: 10,
+      bulletSpeed: 100,
+      shootingThreshold: 30,
+      damage: 1,
       //size: Vector2(140, 257),
     );
     universo.add(enemigo4);
-
-    enemigo5 = RangedEnemy(
-      sprite: await Sprite.load('2B.png'),
-      position: Vector2(900, 400),
-      //size: Vector2(134, 199),
-    );
-    universo.add(enemigo5);
 
     hud = GameHud()..priority = 100;
     camara?.viewport.add(hud);
@@ -163,3 +181,177 @@ void startBgmMusic() {
   FlameAudio.bgm.initialize();
   FlameAudio.bgm.play('bg_music.ogg');
 }
+
+
+//
+//    enemigo5 = RangedEnemy(
+//      sprite: await Sprite.load('2B.png'),
+//      position: Vector2(900, 400),
+//      maxHitPoints: 10,
+//      bulletSpeed: 100,
+//      shootingThreshold: 30,
+//      damage: 1,
+//      //size: Vector2(134, 199),
+//    );
+//    universo.add(enemigo5);
+//
+//    enemigo6 = RangedEnemy(
+//      sprite: await Sprite.load('9B.png'),
+//      position: Vector2(100, 800),
+//      size: Vector2(140, 220),
+//      maxHitPoints: 20,
+//      rotationSpeed: 3.0,
+//      bulletSpeed: 115,
+//      shootingThreshold: 30,
+//      damage: 4,
+//    );
+//    universo.add(enemigo6);
+//
+//    enemigo7 = RangedEnemy(
+//      sprite: await Sprite.load('11B.png'),
+//      position: Vector2(400, 700),
+//      maxHitPoints: 20,
+//      rotationSpeed: 3.0,
+//      bulletSpeed: 115,
+//      shootingThreshold: 30,
+//      damage: 2,
+//    );
+//    universo.add(enemigo7);
+//
+//    enemigo8 = RangedEnemy(
+//      sprite: await Sprite.load('3B.png'),
+//      position: Vector2(550, 800),
+//      maxHitPoints: 20,
+//      rotationSpeed: 4.0,
+//      bulletSpeed: 115,
+//      shootingThreshold: 30,
+//      damage: 2,
+//    );
+//    universo.add(enemigo8);
+//
+//    enemigo9 = RangedEnemy(
+//      sprite: await Sprite.load('7B.png'),
+//      position: Vector2(750, 950),
+//      maxHitPoints: 20,
+//      bulletSpeed: 115,
+//      shootingThreshold: 30,
+//      damage: 2,
+//    );
+//    universo.add(enemigo9);
+//
+//    enemigo10 = RangedEnemy(
+//      sprite: await Sprite.load('2B.png'),
+//      position: Vector2(900, 800),
+//      maxHitPoints: 20,
+//      bulletSpeed: 115,
+//      shootingThreshold: 30,
+//      damage: 2,
+//    );
+//    universo.add(enemigo10);
+//    enemigo11 = RangedEnemy(
+//      sprite: await Sprite.load('9B.png'),
+//      position: Vector2(100, 1200),
+//      size: Vector2(140, 220),
+//      maxHitPoints: 40,
+//      rotationSpeed: 3.0,
+//      bulletSpeed: 130,
+//      shootingThreshold: 30,
+//      damage: 8,
+//    );
+//    universo.add(enemigo11);
+//
+//    enemigo12 = RangedEnemy(
+//      sprite: await Sprite.load('11B.png'),
+//      position: Vector2(400, 1100),
+//      maxHitPoints: 40,
+//      rotationSpeed: 3.0,
+//      bulletSpeed: 130,
+//      shootingThreshold: 30,
+//      damage: 4,
+//    );
+//    universo.add(enemigo12);
+//
+//    enemigo13 = RangedEnemy(
+//      sprite: await Sprite.load('3B.png'),
+//      position: Vector2(550, 1200),
+//      maxHitPoints: 40,
+//      rotationSpeed: 4.0,
+//      bulletSpeed: 130,
+//      shootingThreshold: 30,
+//      damage: 4,
+//    );
+//    universo.add(enemigo13);
+//
+//    enemigo14 = RangedEnemy(
+//      sprite: await Sprite.load('7B.png'),
+//      position: Vector2(750, 1350),
+//      maxHitPoints: 40,
+//      bulletSpeed: 130,
+//      shootingThreshold: 30,
+//      damage: 4,
+//    );
+//    universo.add(enemigo14);
+//
+//    enemigo15 = RangedEnemy(
+//      sprite: await Sprite.load('2B.png'),
+//      position: Vector2(900, 1200),
+//      maxHitPoints: 40,
+//      bulletSpeed: 130,
+//      shootingThreshold: 30,
+//      damage: 4,
+//    );
+//    universo.add(enemigo15);
+//
+//    enemigo16 = RangedEnemy(
+//      sprite: await Sprite.load('9B.png'),
+//      position: Vector2(100, 1600),
+//      size: Vector2(140, 220),
+//      maxHitPoints: 80,
+//      rotationSpeed: 3.0,
+//      bulletSpeed: 145,
+//      shootingThreshold: 30,
+//      damage: 16,
+//    );
+//    universo.add(enemigo16);
+//
+//    enemigo17 = RangedEnemy(
+//      sprite: await Sprite.load('11B.png'),
+//      position: Vector2(400, 1500),
+//      maxHitPoints: 80,
+//      rotationSpeed: 3.0,
+//      bulletSpeed: 145,
+//      shootingThreshold: 30,
+//      damage: 8,
+//    );
+//    universo.add(enemigo17);
+//
+//    enemigo18 = RangedEnemy(
+//      sprite: await Sprite.load('3B.png'),
+//      position: Vector2(550, 1600),
+//      maxHitPoints: 80,
+//      rotationSpeed: 4.0,
+//      bulletSpeed: 145,
+//      shootingThreshold: 30,
+//      damage: 8,
+//    );
+//    universo.add(enemigo18);
+//
+//    enemigo19 = RangedEnemy(
+//      sprite: await Sprite.load('7B.png'),
+//      position: Vector2(750, 1750),
+//      maxHitPoints: 80,
+//      bulletSpeed: 145,
+//      shootingThreshold: 30,
+//      damage: 8,
+//    );
+//    universo.add(enemigo19);
+//
+//    enemigo20 = RangedEnemy(
+//      sprite: await Sprite.load('2B.png'),
+//      position: Vector2(900, 1600),
+//      maxHitPoints: 80,
+//      bulletSpeed: 145,
+//      shootingThreshold: 30,
+//      damage: 8,
+//    );
+//    universo.add(enemigo20);
