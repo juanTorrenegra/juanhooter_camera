@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
@@ -13,6 +14,9 @@ abstract class Enemigo extends SpriteComponent
   final double movementSpeed;
   final double rotationSpeed;
   bool _isActivated = false;
+
+  bool get isInViewport => _isInViewport;
+  bool _isInViewport = false;
 
   Enemigo({
     required Sprite sprite,
@@ -33,6 +37,30 @@ abstract class Enemigo extends SpriteComponent
          sprite: sprite,
        );
 
+  // Método para verificar si está en el viewport
+  void updateViewportStatus() {
+    final camera = game.camara;
+    if (camera == null) return;
+
+    // Calcular si el enemigo está dentro del viewport de la cámara
+    final cameraRect = Rect.fromCenter(
+      center: Offset(
+        camera.viewfinder.position.x,
+        camera.viewfinder.position.y,
+      ),
+      width: camera.viewport.size.x,
+      height: camera.viewport.size.y,
+    );
+
+    final enemyRect = Rect.fromCenter(
+      center: Offset(position.x, position.y),
+      width: size.x,
+      height: size.y,
+    );
+
+    _isInViewport = cameraRect.overlaps(enemyRect);
+  }
+
   @override
   Future<void> onLoad() async {
     add(CircleHitbox(collisionType: CollisionType.active));
@@ -41,6 +69,7 @@ abstract class Enemigo extends SpriteComponent
   @override
   void update(double dt) {
     super.update(dt);
+    updateViewportStatus();
     if (_isActivated) {
       onUpdateBehavior(dt);
     }

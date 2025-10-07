@@ -19,7 +19,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       );
 
   //double _baseSpeed = 80;
-  double _currentSpeed = 110;
+  double _currentSpeed = 50;
   bool isFastMode = false;
   double _angle = 0;
 
@@ -34,6 +34,8 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   double blinkInterval = 0.1; // ✅ Parpadeo cada 0.1 segundos
 
   // ✅ Variables para la secuencia de muerte
+  // En la clase Player, modifica el getter para acceder al estado de muerte del juego
+
   bool _isDying = false;
   double _deathTimer = 0;
   double _deathDuration = 3.0;
@@ -41,7 +43,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
 
   void toggleFastMode(bool activate) {
     isFastMode = !isFastMode; // Invierte el estado actual
-    _currentSpeed = isFastMode ? 300 : 80;
+    _currentSpeed = isFastMode ? 250 : 50;
   }
 
   // Método para recibir daño

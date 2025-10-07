@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:juanshooter/utils/game_utils.dart';
 import 'dart:math';
 import 'dart:ui';
 
@@ -11,10 +12,11 @@ import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/actors/ranged_enemy.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:flame_audio/flame_audio.dart';
+
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
 // juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
 
-//prototipo
+enum CameraMode { explorer, battle }
 
 class MyGame extends FlameGame
     with HasGameReference<MyGame>, HasCollisionDetection {
@@ -33,6 +35,202 @@ class MyGame extends FlameGame
   Vector2 currentPlayerPos = Vector2.zero();
   late AudioPool pool;
   double timeScale = 1.0;
+
+  // SISTEMA DE CÁMARA DUAL
+  CameraMode currentCameraMode = CameraMode.explorer;
+  Vector2 cameraOffset = Vector2.zero();
+  double maxCameraOffset = 250.0; // Límite máximo de desplazamiento
+  double cameraLerpStrength = 0.002; //suavizado 0.1 = 10%, 1.0 = instantaneo
+  double cameraReturnSpeed = 0.0005; //Vel return center(0= no regresa) 0.05=5%
+  bool shouldReturnToCenter = true; // idle= back to center
+
+  // Variables para modo batalla
+  Enemigo? currentTargetEnemy;
+  double battleCameraLerpStrength = 0.08;
+  double maxBattleZoom = 1.2; // Zoom máximo en modo batalla
+  double minBattleZoom = 0.8; // Zoom mínimo en modo batalla
+
+  double battleZoomLevel = 1.0;
+  bool isFirstBattleFrame = true;
+  Vector2 battleFocusPoint = Vector2.zero();
+  double battlePadding = 100.0; // Espacio adicional alrededor de player/enemigo
+
+  // Método para encontrar el enemigo más cercano en el viewport
+  Enemigo? findClosestEnemyInViewport() {
+    List<Enemigo> enemiesInViewport = [];
+
+    // Buscar todos los enemigos en el viewport
+    for (final component in universo.children) {
+      if (component is Enemigo && component.isInViewport) {
+        enemiesInViewport.add(component);
+      }
+    }
+
+    if (enemiesInViewport.isEmpty) return null;
+
+    // Encontrar el más cercano al player
+    enemiesInViewport.sort((a, b) {
+      final distA = (a.position - player.position).length;
+      final distB = (b.position - player.position).length;
+      return distA.compareTo(distB);
+    });
+
+    return enemiesInViewport.first;
+  }
+
+  void _updateExplorerCamera(double dt) {
+    final joystickDelta = hud.movementJoystick.relativeDelta;
+
+    Vector2 targetOffset = Vector2.zero();
+
+    if (hud.movementJoystick.direction != JoystickDirection.idle) {
+      targetOffset = joystickDelta * maxCameraOffset;
+
+      if (targetOffset.length > maxCameraOffset) {
+        targetOffset = targetOffset.normalized() * maxCameraOffset;
+      }
+    } else {
+      if (shouldReturnToCenter) {
+        targetOffset = Vector2.zero();
+      } else {
+        targetOffset = cameraOffset;
+      }
+    }
+
+    // Suavizado para modo exploración
+    cameraOffset.x =
+        cameraOffset.x + (targetOffset.x - cameraOffset.x) * cameraLerpStrength;
+    cameraOffset.y =
+        cameraOffset.y + (targetOffset.y - cameraOffset.y) * cameraLerpStrength;
+
+    final targetPosition = player.position + cameraOffset;
+    camara?.viewfinder.position = targetPosition;
+
+    // Resetear zoom en modo exploración
+    camara?.viewfinder.zoom = 1.0;
+  }
+
+  void _updateBattleCamera(double dt) {
+    if (currentTargetEnemy == null || !currentTargetEnemy!.isMounted) {
+      _switchToExplorerMode();
+      return;
+    }
+
+    // PRIMER FRAME DE BATALLA: Calcular encuadre instantáneo
+    if (isFirstBattleFrame) {
+      _calculateBattleEncuadre();
+      isFirstBattleFrame = false;
+    }
+
+    // Mantener el encuadre durante la batalla
+    _maintainBattleEncuadre(dt);
+  }
+
+  void _calculateBattleEncuadre() {
+    // 1. Calcular punto medio entre player y enemigo
+    battleFocusPoint = (player.position + currentTargetEnemy!.position) / 2;
+
+    // 2. Calcular distancia entre player y enemigo
+    final distance = (player.position - currentTargetEnemy!.position).length;
+
+    // 3. Calcular zoom necesario para que ambos quepan en pantalla con padding
+    final viewportSize = camara!.viewport.size;
+    final requiredWidth = distance + battlePadding * 2;
+    final requiredHeight = distance + battlePadding * 2;
+
+    // 4. Calcular zoom basado en la dimensión más grande necesaria
+    final zoomBasedOnWidth = viewportSize.x / requiredWidth;
+    final zoomBasedOnHeight = viewportSize.y / requiredHeight;
+
+    // 5. Usar el zoom más pequeño (que muestra más área)
+    battleZoomLevel = min(zoomBasedOnWidth, zoomBasedOnHeight).clamp(0.3, 1.0);
+
+    // 6. Aplicar instantáneamente
+    camara?.viewfinder.position = battleFocusPoint;
+    camara?.viewfinder.zoom = battleZoomLevel;
+
+    print("🎥 ENCUADRE BATALLA - Zoom: ${battleZoomLevel.toStringAsFixed(2)}");
+  }
+
+  void _maintainBattleEncuadre(double dt) {
+    // Recalcular punto medio continuamente
+    battleFocusPoint = (player.position + currentTargetEnemy!.position) / 2;
+
+    // Suavizado hacia el nuevo punto medio
+    final currentCamPos = camara!.viewfinder.position;
+    final targetPosition = Vector2(
+      currentCamPos.x + (battleFocusPoint.x - currentCamPos.x) * 0.1,
+      currentCamPos.y + (battleFocusPoint.y - currentCamPos.y) * 0.1,
+    );
+
+    camara?.viewfinder.position = targetPosition;
+
+    // Recalcular zoom si la distancia cambia significativamente
+    final currentDistance =
+        (player.position - currentTargetEnemy!.position).length;
+    final viewportSize = camara!.viewport.size;
+    final requiredWidth = currentDistance + battlePadding * 2;
+    final requiredHeight = currentDistance + battlePadding * 2;
+
+    final zoomBasedOnWidth = viewportSize.x / requiredWidth;
+    final zoomBasedOnHeight = viewportSize.y / requiredHeight;
+    final newZoomLevel = min(
+      zoomBasedOnWidth,
+      zoomBasedOnHeight,
+    ).clamp(0.3, 1.0);
+
+    // Suavizar transición de zoom
+    final currentZoom = camara?.viewfinder.zoom ?? 1.0;
+    camara?.viewfinder.zoom = currentZoom + (newZoomLevel - currentZoom) * 0.05;
+  }
+
+  void _switchToExplorerMode() {
+    currentCameraMode = CameraMode.explorer;
+    currentTargetEnemy = null;
+    isFirstBattleFrame = true;
+
+    // Restaurar zoom normal instantáneamente
+    camara?.viewfinder.zoom = 1.0;
+
+    print("🟢 VOLVIENDO A MODO EXPLORACIÓN");
+  }
+
+  void updateCameraMode() {
+    final closestEnemy = findClosestEnemyInViewport();
+
+    if (closestEnemy != null && currentCameraMode != CameraMode.battle) {
+      // Cambiar a modo batalla
+      currentCameraMode = CameraMode.battle;
+      currentTargetEnemy = closestEnemy;
+      isFirstBattleFrame = true;
+      print("🔴 MODO BATALLA ACTIVADO");
+    } else if (closestEnemy == null && currentCameraMode == CameraMode.battle) {
+      _switchToExplorerMode();
+    }
+
+    // Si estamos en modo batalla y el enemigo actual murió, buscar nuevo
+    if (currentCameraMode == CameraMode.battle &&
+        (currentTargetEnemy?.isMounted != true)) {
+      currentTargetEnemy = findClosestEnemyInViewport();
+      if (currentTargetEnemy == null) {
+        _switchToExplorerMode();
+      } else {
+        isFirstBattleFrame = true; // Recalcular encuadre para nuevo enemigo
+      }
+    }
+  }
+
+  double _calculateBattleZoom(double distance) {
+    // Zoom más cercano cuando los enemigos están lejos, más amplio cuando están cerca
+    const maxDistance = 500.0;
+    const minDistance = 100.0;
+
+    double normalizedDistance =
+        (distance - minDistance) / (maxDistance - minDistance);
+    normalizedDistance = normalizedDistance.clamp(0.0, 1.0);
+
+    return minBattleZoom + (maxBattleZoom - minBattleZoom) * normalizedDistance;
+  }
 
   void fast() {
     // Llama al método del player
@@ -151,6 +349,60 @@ class MyGame extends FlameGame
     super.update(dt * timeScale);
     // Actualizar posición de depuración
     currentPlayerPos.setFrom(player.position);
+
+    // Actualizar el desplazamiento de la cámara basado en el input del joystick
+    _updateCameraOffset(dt);
+  }
+
+  void _updateCameraOffset(double dt) {
+    if (camara == null) return;
+
+    updateCameraMode(); // Actualizar modo primero
+
+    if (currentCameraMode == CameraMode.explorer) {
+      _updateExplorerCamera(dt);
+    } else {
+      _updateBattleCamera(dt);
+    }
+
+    final joystickDelta = hud.movementJoystick.relativeDelta;
+
+    // 1. CALCULAR DESPLAZAMIENTO OBJETIVO
+    Vector2 targetOffset = Vector2.zero();
+
+    if (hud.movementJoystick.direction != JoystickDirection.idle) {
+      targetOffset = joystickDelta * maxCameraOffset;
+
+      if (targetOffset.length > maxCameraOffset) {
+        targetOffset = targetOffset.normalized() * maxCameraOffset;
+      }
+    } else {
+      if (shouldReturnToCenter) {
+        targetOffset = Vector2.zero();
+      } else {
+        targetOffset = cameraOffset;
+      }
+    }
+
+    // 2. SUAVIZADO MANUAL - CONTROL DE VELOCIDAD
+    double lerpFactor;
+    if (hud.movementJoystick.direction != JoystickDirection.idle) {
+      lerpFactor = cameraLerpStrength;
+    } else if (shouldReturnToCenter) {
+      lerpFactor = cameraReturnSpeed;
+    } else {
+      lerpFactor = 0.0; // No mover
+    }
+
+    // Aplicar interpolación lineal manual
+    cameraOffset.x =
+        cameraOffset.x + (targetOffset.x - cameraOffset.x) * lerpFactor;
+    cameraOffset.y =
+        cameraOffset.y + (targetOffset.y - cameraOffset.y) * lerpFactor;
+
+    // 3. APLICAR A LA CÁMARA
+    final targetPosition = player.position + cameraOffset;
+    camara?.viewfinder.position = targetPosition;
   }
 
   @override
