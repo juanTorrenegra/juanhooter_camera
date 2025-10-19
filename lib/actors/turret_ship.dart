@@ -4,11 +4,11 @@ import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:juanshooter/actors/enemigo.dart';
-import 'package:juanshooter/actors/ranged_enemy.dart';
-import 'package:juanshooter/actors/turret.dart';
-import 'package:juanshooter/weapons/bullet.dart';
-import 'package:juanshooter/utils/game_utils.dart';
+import 'package:juanhooter_camera/actors/enemigo.dart';
+import 'package:juanhooter_camera/actors/ranged_enemy.dart';
+import 'package:juanhooter_camera/actors/turret.dart';
+import 'package:juanhooter_camera/weapons/bullet.dart';
+import 'package:juanhooter_camera/utils/game_utils.dart';
 
 class TurretShip extends RangedEnemy {
   final List<Turret> turrets = [];

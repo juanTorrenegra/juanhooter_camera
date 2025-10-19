@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:juanshooter/game.dart';
+import 'package:juanhooter_camera/game.dart';
 
 class Bullet extends SpriteComponent with HasGameReference<MyGame> {
   final double speed;

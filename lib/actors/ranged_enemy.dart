@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:flame/components.dart';
-import 'package:juanshooter/game.dart';
-import 'package:juanshooter/weapons/enemy_bullet.dart';
-import 'package:juanshooter/utils/game_utils.dart';
+import 'package:juanhooter_camera/game.dart';
+import 'package:juanhooter_camera/weapons/enemy_bullet.dart';
+import 'package:juanhooter_camera/utils/game_utils.dart';
 import 'enemigo.dart';
 //shootingThreshold: 5.0,   // Más preciso (+ difícil)
 //shootingThreshold: 10.0,  // Balanceado

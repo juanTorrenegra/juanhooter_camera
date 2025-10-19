@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
-import 'package:juanshooter/game.dart';
+import 'package:juanhooter_camera/game.dart';
 
 import 'package:flutter/material.dart';
 
@@ -18,11 +18,11 @@ class VisorOverlay extends StatelessWidget {
       color: Colors.transparent, // Fondo completamente transparente
       child: Stack(
         children: [
-          Positioned.fill(
-            child: Container(
-              color: const Color(0xAA000000), //Fondo negro semi-transparente
-            ),
-          ),
+          //Positioned.fill(
+          //  child: Container(
+          //    color: const Color(0xAA000000), //Fondo negro semi-transparente
+          //  ),
+          //),
           Positioned.fill(
             child: ClipRect(
               child: BackdropFilter(

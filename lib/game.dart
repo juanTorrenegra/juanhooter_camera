@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:juanshooter/utils/game_utils.dart';
+import 'package:juanhooter_camera/utils/game_utils.dart';
 import 'dart:math';
 import 'dart:ui';
 
@@ -7,10 +7,10 @@ import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:juanshooter/actors/enemigo.dart';
-import 'package:juanshooter/actors/player.dart';
-import 'package:juanshooter/actors/ranged_enemy.dart';
-import 'package:juanshooter/hud/game_hud.dart';
+import 'package:juanhooter_camera/actors/enemigo.dart';
+import 'package:juanhooter_camera/actors/player.dart';
+import 'package:juanhooter_camera/actors/ranged_enemy.dart';
+import 'package:juanhooter_camera/hud/game_hud.dart';
 import 'package:flame_audio/flame_audio.dart';
 
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
@@ -35,6 +35,14 @@ class MyGame extends FlameGame
   Vector2 currentPlayerPos = Vector2.zero();
   late AudioPool pool;
   double timeScale = 1.0;
+
+  int shipsDestroyed = 0;
+
+  void incrementShipsDestroyed() {
+    shipsDestroyed++;
+    // Actualizar el HUD si existe
+    hud.updateShipsDestroyed(shipsDestroyed);
+  }
 
   // SISTEMA DE CÁMARA DUAL
   CameraMode currentCameraMode = CameraMode.explorer;

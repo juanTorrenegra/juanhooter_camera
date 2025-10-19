@@ -1,6 +1,6 @@
 // hud_decoration_overlay.dart
 import 'package:flutter/material.dart';
-import 'package:juanshooter/game.dart';
+import 'package:juanhooter_camera/game.dart';
 
 class HudDecorationOverlay extends StatelessWidget {
   const HudDecorationOverlay({required this.game, super.key});

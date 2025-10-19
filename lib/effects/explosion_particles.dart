@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import 'package:juanshooter/game.dart';
+import 'package:juanhooter_camera/game.dart';
 
 class ExplosionParticle extends CircleComponent {
   final Vector2 initialPosition;

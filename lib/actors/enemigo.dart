@@ -3,8 +3,8 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
-import 'package:juanshooter/game.dart';
-import 'package:juanshooter/weapons/bullet.dart';
+import 'package:juanhooter_camera/game.dart';
+import 'package:juanhooter_camera/weapons/bullet.dart';
 
 abstract class Enemigo extends SpriteComponent
     with HasGameReference<MyGame>, CollisionCallbacks {
@@ -143,5 +143,7 @@ abstract class Enemigo extends SpriteComponent
     }
   }
 
-  void onDeath() {}
+  void onDeath() {
+    game.incrementShipsDestroyed();
+  }
 }

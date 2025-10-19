@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:juanshooter/actors/player.dart';
-import 'package:juanshooter/game.dart';
+import 'package:juanhooter_camera/actors/player.dart';
+import 'package:juanhooter_camera/game.dart';
 
 class EnemyBullet extends SpriteComponent
     with HasGameReference<MyGame>, CollisionCallbacks {
