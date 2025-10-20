@@ -19,7 +19,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       );
 
   //double _baseSpeed = 80;
-  double _currentSpeed = 50;
+  double currentSpeed = 50;
   bool isFastMode = false;
   double _angle = 0;
 
@@ -43,7 +43,10 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
 
   void toggleFastMode(bool activate) {
     isFastMode = !isFastMode; // Invierte el estado actual
-    _currentSpeed = isFastMode ? 250 : 50;
+    currentSpeed = isFastMode ? 250 : 50;
+    print(
+      '🚀 toggleFastMode llamado - isFastMode: $isFastMode, currentSpeed: $currentSpeed',
+    );
   }
 
   // Método para recibir daño
@@ -152,7 +155,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       // Movement: accede al joystick a través de game.hud
       if (game.hud.movementJoystick.direction != JoystickDirection.idle) {
         position.add(
-          game.hud.movementJoystick.relativeDelta * _currentSpeed * dt,
+          game.hud.movementJoystick.relativeDelta * currentSpeed * dt,
         );
       }
 

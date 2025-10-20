@@ -40,7 +40,6 @@ class MyGame extends FlameGame
 
   void incrementShipsDestroyed() {
     shipsDestroyed++;
-    // Actualizar el HUD si existe
     hud.updateShipsDestroyed(shipsDestroyed);
   }
 
@@ -241,7 +240,6 @@ class MyGame extends FlameGame
   }
 
   void fast() {
-    // Llama al método del player
     player.toggleFastMode(!player.isFastMode); // Alternar estado
   }
 
@@ -321,7 +319,7 @@ class MyGame extends FlameGame
 
     enemigo3 = RangedEnemy(
       sprite: await Sprite.load('bite30x24.png'), //derecha
-      position: Vector2(850, 400),
+      position: Vector2(850, 450),
       size: Vector2(30, 24),
       rotationSpeed: 4.0,
       maxHitPoints: 10,
