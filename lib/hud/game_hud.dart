@@ -182,8 +182,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       },
     );
 
-    add(debugMenuButton);
-
     _initializeDebugDrawer();
 
     // Añadir componentes al HUD
@@ -198,6 +196,8 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     add(debugDrawerButton);
     add(debugDrawerPanel);
     add(debugFastButton);
+
+    add(debugMenuButton);
 
     _positionComponents();
     _toggleDebugDrawer(false); // Iniciar cerrado

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:juanhooter_camera/overlays/score_board.dart';
 import 'package:juanhooter_camera/utils/game_utils.dart';
 import 'dart:math';
 import 'dart:ui';
@@ -15,7 +16,7 @@ import 'package:flame_audio/flame_audio.dart';
 
 //tamaño de pantalla = [796.3636474609375,392.7272644042969]
 // juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
-
+// parking game (inside game in parking the ship, gettin tipped or getting yelled for it)
 enum CameraMode { explorer, battle }
 
 class MyGame extends FlameGame
@@ -37,10 +38,15 @@ class MyGame extends FlameGame
   double timeScale = 1.0;
 
   int shipsDestroyed = 0;
+  //ScoreBoard? scoreBoard;
+  final ValueNotifier<int> scoreNotifier = ValueNotifier<int>(0);
 
   void incrementShipsDestroyed() {
     shipsDestroyed++;
+    // Notificar al ScoreBoard si existe
+    //scoreBoard?.onScoreUpdated(shipsDestroyed);
     hud.updateShipsDestroyed(shipsDestroyed);
+    scoreNotifier.value = shipsDestroyed;
   }
 
   // SISTEMA DE CÁMARA DUAL
@@ -347,6 +353,14 @@ class MyGame extends FlameGame
     currentPlayerPos = player.position.clone();
 
     camara?.follow(player);
+
+    scoreNotifier.value = shipsDestroyed;
+  }
+
+  @override
+  void onRemove() {
+    scoreNotifier.dispose(); // ✅ Importante: liberar recursos
+    super.onRemove();
   }
 
   @override
@@ -424,6 +438,7 @@ void startBgmMusic() {
   FlameAudio.bgm.initialize();
   FlameAudio.bgm.play('bg_music.ogg');
 }
+
 
 
 //

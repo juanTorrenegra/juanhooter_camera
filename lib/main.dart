@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:juanhooter_camera/overlays/debug_menu.dart';
 import 'package:juanhooter_camera/overlays/hud_decoration_overlay.dart';
 import 'package:juanhooter_camera/overlays/main_menu.dart';
+import 'package:juanhooter_camera/overlays/score_board.dart';
 import 'package:juanhooter_camera/utils/game_utils.dart'; //landscape mode
 
 void main() {
@@ -26,9 +27,14 @@ void main() {
               'MainMenu': (_, game) => VisorOverlay(game: game),
               "HudDecoration": (_, game) => HudDecorationOverlay(game: game),
               'DebugMenu': (_, game) => DebugMenu(game: game),
+              'ScoreBoard': (_, game) => ScoreBoard(game: game),
               //'GameOver': (_, game) => GameOver(game: game),
             },
-            initialActiveOverlays: const ['HudDecoration', 'MainMenu'],
+            initialActiveOverlays: const [
+              'HudDecoration',
+              'MainMenu',
+              'ScoreBoard',
+            ],
           ),
         );
       });
