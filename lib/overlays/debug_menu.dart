@@ -42,11 +42,7 @@ class _DebugMenuState extends State<DebugMenu> {
         width: 50,
         height: 50,
         margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.black.withAlpha(50),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.cyan, width: 1),
-        ),
+        decoration: BoxDecoration(color: Colors.black.withAlpha(50)),
         child: const Icon(Icons.bug_report, color: Colors.cyan, size: 18),
       ),
     );
@@ -54,8 +50,8 @@ class _DebugMenuState extends State<DebugMenu> {
 
   Widget _buildDebugDrawer() {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.29, // 1/4 de la pantalla
-      height: MediaQuery.of(context).size.height * 0.7,
+      width: MediaQuery.of(context).size.width * 0.23, // 1/4 de la pantalla
+      height: MediaQuery.of(context).size.height * 0.6,
       decoration: BoxDecoration(
         color: Colors.cyan.withAlpha(20),
         border: Border.all(color: Colors.cyan.withAlpha(50), width: 1),
@@ -74,22 +70,22 @@ class _DebugMenuState extends State<DebugMenu> {
           children: [
             // Header
             _buildHeader(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 7),
 
             // Fast Mode Toggle
             _buildFastModeToggle(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 6),
 
             // Zoom Controls
             _buildZoomControls(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 6),
 
             // Espacio para futuros botones
-            //_buildPlaceholderButton('God Mode'),
-            //const SizedBox(height: 8),
-            //_buildPlaceholderButton('Spawn Enemy'),
-            //const SizedBox(height: 8),
-            //_buildPlaceholderButton('Reset Level'),
+            _buildPlaceholderButton('God Mode'),
+            const SizedBox(height: 8),
+            _buildPlaceholderButton('Spawn Enemy'),
+            const SizedBox(height: 8),
+            _buildPlaceholderButton('Reset Level'),
           ],
         ),
       ),
@@ -121,12 +117,14 @@ class _DebugMenuState extends State<DebugMenu> {
       child: ListTile(
         leading: Icon(
           Icons.rocket_launch,
-          color: widget.game.player.isFastMode ? Colors.green : Colors.red,
+          color: widget.game.player.isFastMode
+              ? const Color.fromARGB(72, 76, 175, 79)
+              : const Color.fromARGB(49, 244, 67, 54),
         ),
         trailing: Switch(
           value: widget.game.player.isFastMode,
-          activeThumbColor: Colors.green,
-          inactiveThumbColor: Colors.red,
+          activeThumbColor: const Color.fromARGB(72, 76, 175, 79),
+          inactiveThumbColor: const Color.fromARGB(49, 244, 67, 54),
           onChanged: (value) {
             setState(() {
               widget.game.player.isFastMode = value;
@@ -151,9 +149,9 @@ class _DebugMenuState extends State<DebugMenu> {
       decoration: BoxDecoration(
         color: const Color.fromARGB(39, 33, 33, 33),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue, width: 1),
+        border: Border.all(color: Colors.blue, width: 0.5),
       ),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -190,8 +188,8 @@ class _DebugMenuState extends State<DebugMenu> {
               // Botón -
               Expanded(
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.remove, size: 10),
-                  label: const Text('ZOOM OUT'),
+                  //icon: const Icon(Icons.remove, size: 10),
+                  label: const Text('-', style: TextStyle(fontSize: 15)),
                   onPressed: () {
                     setState(() {
                       _currentZoom = (_currentZoom - 0.1).clamp(0.5, 3.0);
@@ -201,7 +199,7 @@ class _DebugMenuState extends State<DebugMenu> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red.withAlpha(50),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                   ),
                 ),
               ),
@@ -210,8 +208,8 @@ class _DebugMenuState extends State<DebugMenu> {
               // Botón +
               Expanded(
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.add, size: 10),
-                  label: const Text('ZOOM IN'),
+                  //icon: const Icon(Icons.add, size: 10),
+                  label: const Text('+', style: TextStyle(fontSize: 15)),
                   onPressed: () {
                     setState(() {
                       _currentZoom = (_currentZoom + 0.1).clamp(0.5, 3.0);
@@ -221,7 +219,7 @@ class _DebugMenuState extends State<DebugMenu> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.withAlpha(50),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                   ),
                 ),
               ),
@@ -229,22 +227,6 @@ class _DebugMenuState extends State<DebugMenu> {
           ),
 
           // Slider de zoom (opcional)
-          const SizedBox(height: 12),
-          Slider(
-            value: _currentZoom,
-            min: 0.5,
-            max: 3.0,
-            divisions: 25,
-            label: _currentZoom.toStringAsFixed(1),
-            activeColor: Colors.cyan,
-            inactiveColor: Colors.grey[600],
-            onChanged: (value) {
-              setState(() {
-                _currentZoom = value;
-                _applyZoom();
-              });
-            },
-          ),
         ],
       ),
     );
@@ -257,7 +239,7 @@ class _DebugMenuState extends State<DebugMenu> {
         print('$text pressed');
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.grey[800],
+        backgroundColor: const Color.fromARGB(38, 24, 255, 255),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 12),
       ),

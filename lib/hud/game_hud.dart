@@ -81,13 +81,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
 
   late final HudButtonComponent debugMenuButton;
 
-  // ✅ NUEVO: Componentes para el drawer de debug
-  late final HudButtonComponent debugDrawerButton;
-  late final RectangleComponent debugDrawerPanel;
-  late final HudButtonComponent debugFastButton;
-  bool isDebugDrawerOpen = false;
-
-  late final Player player; // ------ test
   @override
   Future<void> onLoad() async {
     movementJoystick = JoystickComponent(
@@ -169,6 +162,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         ),
       ),
     );
+
     debugMenuButton = HudButtonComponent(
       button: RectangleComponent(
         size: Vector2(40, 40),
@@ -181,9 +175,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         game.overlays.add('DebugMenu');
       },
     );
-
-    _initializeDebugDrawer();
-
     // Añadir componentes al HUD
     add(menu);
     add(movementJoystick);
@@ -191,96 +182,9 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     add(shootButton);
     add(healthBar);
     add(shipsDestroyedText);
-
-    // ✅ NUEVO: Añadir componentes del drawer (inicialmente cerrado)
-    add(debugDrawerButton);
-    add(debugDrawerPanel);
-    add(debugFastButton);
-
     add(debugMenuButton);
 
     _positionComponents();
-    _toggleDebugDrawer(false); // Iniciar cerrado
-  }
-
-  void _initializeDebugDrawer() {
-    // Botón para abrir/cerrar el drawer
-    debugDrawerButton = HudButtonComponent(
-      button: RectangleComponent(
-        size: Vector2(30, 60),
-        paint: Paint()
-          ..color = Colors.blue.withAlpha(100)
-          ..style = PaintingStyle.fill,
-      ),
-      onPressed: _toggleDebugDrawer,
-    );
-
-    // Panel del drawer (fondo)
-    debugDrawerPanel = RectangleComponent(
-      size: Vector2.zero(),
-      paint: Paint()
-        ..color = Colors.black.withAlpha(180)
-        ..style = PaintingStyle.fill,
-    );
-
-    // Botón fast dentro del drawer
-    debugFastButton = HudButtonComponent(
-      button: RectangleComponent(
-        size: Vector2.zero(),
-        paint: Paint()
-          ..color = Colors.red.withAlpha(150)
-          ..style = PaintingStyle.fill,
-        children: [
-          TextComponent(
-            text: 'Fast',
-            textRenderer: TextPaint(
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontFamily: "Megatrans",
-              ),
-            ),
-            anchor: Anchor.center,
-            position: Vector2(50, 15), // Centrado en el botón
-          ),
-        ],
-      ),
-      onPressed: () => game.fast(),
-    );
-    _updateFastButtonColor();
-    debugFastButton.scale = Vector2.zero();
-    debugDrawerPanel.scale = Vector2.zero();
-  }
-
-  void _updateFastButtonColor() {
-    final buttonRect = debugFastButton.button as RectangleComponent?;
-    if (buttonRect != null) {
-      buttonRect.paint.color = game.player.isFastMode
-          ? Colors.green.withAlpha(200) // ✅ Verde cuando está activo
-          : Colors.red.withAlpha(150); // ✅ Rojo cuando está inactivo
-    }
-  }
-
-  void _toggleDebugDrawer([bool? forceState]) {
-    if (forceState != null) {
-      isDebugDrawerOpen = forceState;
-    } else {
-      isDebugDrawerOpen = !isDebugDrawerOpen;
-    }
-
-    if (isDebugDrawerOpen) {
-      // Abrir drawer - mostrar panel y botones
-      debugDrawerPanel.size = Vector2(120, 200);
-      debugFastButton.button?.size = Vector2(100, 30);
-      debugFastButton.scale = Vector2.all(1.0);
-      debugDrawerPanel.scale = Vector2.all(1.0);
-    } else {
-      // Cerrar drawer - ocultar panel y botones
-      debugDrawerPanel.size = Vector2.zero();
-      debugFastButton.button?.size = Vector2.zero();
-      debugFastButton.scale = Vector2.zero();
-      debugDrawerPanel.scale = Vector2.zero();
-    }
   }
 
   void updateShipsDestroyed(int count) {
@@ -319,28 +223,8 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       menu.position = Vector2(game.size.x / 2 - 15, game.size.y - 60);
       healthBar.position = Vector2((game.size.x - healthBar.width) / 2, 20);
       shipsDestroyedText.position = Vector2(margin + 150, margin);
-      // ✅ NUEVO: Posicionar componentes del drawer
-      _positionDebugDrawer();
+
       debugMenuButton.position = Vector2(20, 20);
     }
-  }
-
-  void _positionDebugDrawer() {
-    final margin = 10.0;
-
-    // Botón del drawer (siempre visible)
-    debugDrawerButton.position = Vector2(margin, game.size.y / 2 - 30);
-
-    // Panel del drawer (a la derecha del botón)
-    debugDrawerPanel.position = Vector2(
-      debugDrawerButton.position.x + 35,
-      debugDrawerButton.position.y,
-    );
-
-    // Botones dentro del drawer
-    debugFastButton.position = Vector2(
-      debugDrawerPanel.position.x + 10,
-      debugDrawerPanel.position.y + 20,
-    );
   }
 }

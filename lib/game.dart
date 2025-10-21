@@ -43,8 +43,6 @@ class MyGame extends FlameGame
 
   void incrementShipsDestroyed() {
     shipsDestroyed++;
-    // Notificar al ScoreBoard si existe
-    //scoreBoard?.onScoreUpdated(shipsDestroyed);
     hud.updateShipsDestroyed(shipsDestroyed);
     scoreNotifier.value = shipsDestroyed;
   }
