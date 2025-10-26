@@ -4,10 +4,12 @@ import 'package:flame/game.dart';
 import 'package:flutter/widgets.dart';
 import 'package:juanshooter/game.dart';
 import 'package:flutter/services.dart';
-import 'package:juanhooter_camera/overlays/debug_menu.dart';
+
+import 'package:juanshooter/overlays/debug_menu.dart';
 import 'package:juanshooter/overlays/hud_decoration_overlay.dart';
-import 'package:juanhooter_camera/overlays/score_board.dart';
+
 import 'package:juanshooter/overlays/main_menu.dart';
+import 'package:juanshooter/overlays/score_board.dart';
 import 'package:juanshooter/utils/game_utils.dart'; //landscape mode
 
 void main() {
@@ -37,3 +39,6 @@ void main() {
           ),
         );
       });
+    });
+  });
+}

@@ -114,5 +114,7 @@ abstract class Enemigo extends SpriteComponent
     }
   }
 
-  void onDeath() {}
+  void onDeath() {
+    game.incrementShipsDestroyed();
+  }
 }

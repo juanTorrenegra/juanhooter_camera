@@ -9,14 +9,12 @@ class HealthBar extends PositionComponent {
   int currentHealth;
   double width;
   double height;
-
   HealthBar({
     required this.maxHealth,
     required this.currentHealth,
     this.width = 200,
     this.height = 20,
   });
-
   @override
   void render(Canvas canvas) {
     super.render(canvas);
@@ -75,9 +73,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final HudButtonComponent shootButton;
   late final HudButtonComponent fastButton;
   late final HudButtonComponent menu;
-  late final CustomPainterComponent hudVisor;
   late final HealthBar healthBar;
-
   late final TextComponent shipsDestroyedText;
 
   late final HudButtonComponent debugMenuButton;
@@ -100,7 +96,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
           ..strokeWidth = 0.3,
       ),
     );
-
     lookJoystick = JoystickComponent(
       knob: CircleComponent(
         radius: 30,
@@ -117,7 +112,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
           ..strokeWidth = 0.3,
       ),
     );
-
     shootButton = HudButtonComponent(
       button: CircleComponent(
         radius: 40,
@@ -126,7 +120,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 0.3,
       ),
-
       onPressed: () => game.player.shoot(),
     );
 
@@ -145,7 +138,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         game.overlays.add("MainMenu");
       },
     );
-
     healthBar = HealthBar(
       maxHealth: game.player.maxHitPoints,
       currentHealth: game.player.currentHitPoints,
@@ -176,14 +168,11 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         game.overlays.add('DebugMenu');
       },
     );
-
     // Añadir componentes al HUD
     add(menu);
     add(movementJoystick);
     add(lookJoystick);
     add(shootButton);
-    add(fastButton);
-
     add(healthBar);
     add(shipsDestroyedText);
     add(debugMenuButton);
@@ -210,23 +199,20 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     if (isLoaded && game.size.x > 0 && game.size.y > 0) {
       final margin = 30.0; // Ajusta este valor según necesites
       final joystickSize = 100.0; // Tamaño del joystick (radio + margen)
-
       // Posiciona el joystick de movimiento (abajo-izquierda)
       movementJoystick.position = Vector2(
         margin + joystickSize / 2,
         game.size.y - margin - joystickSize / 2,
       );
-
       // Posiciona el joystick de mira (abajo-derecha)
       lookJoystick.position = Vector2(
         game.size.x - margin - joystickSize / 2,
         game.size.y - margin - joystickSize / 2,
       );
-
       // Posiciona el botón de disparo (arriba-derecha)
       shootButton.position = Vector2(game.size.x - 160, 20);
+      //fastButton.position = Vector2(margin, margin);
       menu.position = Vector2(game.size.x / 2 - 15, game.size.y - 60);
-
       healthBar.position = Vector2((game.size.x - healthBar.width) / 2, 20);
       shipsDestroyedText.position = Vector2(margin + 150, margin);
 

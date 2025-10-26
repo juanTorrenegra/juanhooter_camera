@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:juanhooter_camera/game.dart';
+
+import 'package:juanshooter/game.dart';
 
 class DebugMenu extends StatefulWidget {
   final MyGame game;
