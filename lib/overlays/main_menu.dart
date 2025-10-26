@@ -18,11 +18,11 @@ class VisorOverlay extends StatelessWidget {
       color: Colors.transparent, // Fondo completamente transparente
       child: Stack(
         children: [
-          Positioned.fill(
-            child: Container(
-              color: const Color(0xAA000000), //Fondo negro semi-transparente
-            ),
-          ),
+          //Positioned.fill(
+          //  child: Container(
+          //    color: const Color(0xAA000000), //Fondo negro semi-transparente
+          //  ),
+          //),
           Positioned.fill(
             child: ClipRect(
               child: BackdropFilter(
@@ -225,7 +225,7 @@ class MenuPainter extends CustomPainter {
       );
       canvas.drawLine(start, end, crosshairPaint);
     }
-
+    // halo compuesto de lineas radiales (crosshair)
     for (double angle = 0; angle < 360; angle += 1) {
       double radians = angle * (3.14159 / 180.0);
       // Calcula el punto en el borde del círculo

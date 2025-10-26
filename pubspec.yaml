@@ -73,7 +73,7 @@ flutter:
 flutter_icons:
   android: true
   ios: true
-  image_path: assets/images/spaceship.png
+  image_path: assets/images/ship30x24.png
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package

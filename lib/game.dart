@@ -35,6 +35,16 @@ class MyGame extends FlameGame
   late AudioPool pool;
   double timeScale = 1.0;
 
+  int shipsDestroyed = 0;
+  //ScoreBoard? scoreBoard;
+  final ValueNotifier<int> scoreNotifier = ValueNotifier<int>(0);
+
+  void incrementShipsDestroyed() {
+    shipsDestroyed++;
+    hud.updateShipsDestroyed(shipsDestroyed);
+    scoreNotifier.value = shipsDestroyed;
+  }
+
   void fast() {
     // Llama al método del player
     player.toggleFastMode(!player.isFastMode); // Alternar estado
@@ -63,7 +73,7 @@ class MyGame extends FlameGame
 
     final background = SpriteComponent(
       sprite: await Sprite.load('b.png'), //Nebula3.png b.png
-      size: Vector2(3000, 1500),
+      size: Vector2(6000, 3000),
       anchor: Anchor.topLeft,
       position: Vector2(0, 0),
     )..priority = -100;
@@ -81,21 +91,21 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('5.png'), //MINERO
       position: Vector2(100, 100),
       size: Vector2(530, 300),
-      maxHitPoints: 4,
+      maxHitPoints: 20,
       rotationSpeed: 0.4,
       bulletSpeed: 100,
       shootingThreshold: 30,
-      damage: 2,
+      damage: 5,
     );
 
     universo.add(mineroTorretas);
 
     enemigo1 = RangedEnemy(
-      sprite: await Sprite.load('9B.png'), //IZQUIERDA
-      position: Vector2(100, 400),
-      size: Vector2(140, 220),
-      maxHitPoints: 4,
-      rotationSpeed: 0.4,
+      sprite: await Sprite.load('bite30x24.png'), //IZQUIERDA
+      position: Vector2(850, 400),
+      size: Vector2(30, 24),
+      maxHitPoints: 10,
+      rotationSpeed: 3.0,
       bulletSpeed: 100,
       shootingThreshold: 30,
       damage: 2,
@@ -103,33 +113,42 @@ class MyGame extends FlameGame
     universo.add(enemigo1);
 
     enemigo2 = RangedEnemy(
-      sprite: await Sprite.load('11B.png'), //morado
-      position: Vector2(400, 300),
-      //size: Vector2(166, 110),
-      rotationSpeed: 0.6,
-      bulletSpeed: 100,
+      sprite: await Sprite.load('bite30x24.png'), //morado
+      position: Vector2(850, 300),
+      size: Vector2(30, 24),
+      maxHitPoints: 10,
+      rotationSpeed: 3.0,
+      bulletSpeed: 50,
       shootingThreshold: 30,
+      damage: 1,
     );
     universo.add(enemigo2);
 
     enemigo3 = RangedEnemy(
       sprite: await Sprite.load('3B.png'), //derecha
-      position: Vector2(550, 400),
+      position: Vector2(850, 450),
+      size: Vector2(30, 24),
       rotationSpeed: 4.0,
-      //size: Vector2(150, 220),
+      maxHitPoints: 10,
+      bulletSpeed: 100,
+      shootingThreshold: 30,
+      damage: 1,
     );
     universo.add(enemigo3);
 
     enemigo4 = RangedEnemy(
       sprite: await Sprite.load('7B.png'),
       position: Vector2(750, 550),
-      //size: Vector2(140, 257),
+      maxHitPoints: 10,
+      bulletSpeed: 100,
+      shootingThreshold: 30,
+      damage: 1,
     );
     universo.add(enemigo4);
 
     enemigo5 = RangedEnemy(
       sprite: await Sprite.load('2B.png'),
-      position: Vector2(900, 400),
+      position: Vector2(380, 450),
       //size: Vector2(134, 199),
     );
     universo.add(enemigo5);
@@ -140,6 +159,13 @@ class MyGame extends FlameGame
     currentPlayerPos = player.position.clone();
 
     camara?.follow(player);
+    scoreNotifier.value = shipsDestroyed;
+  }
+
+  @override
+  void onRemove() {
+    scoreNotifier.dispose(); // ✅ Importante: liberar recursos
+    super.onRemove();
   }
 
   @override

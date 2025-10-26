@@ -33,8 +33,10 @@ double angleBetween(Vector2 a, Vector2 b) => atan2(b.y - a.y, b.x - a.x);
 // Interpolación lineal entre dos valores
 double lerp(double a, double b, double t) => a + (b - a) * t;
 
-// Interpolación lineal para Vector2
-Vector2 vectorLerp(Vector2 a, Vector2 b, double t) => a + (b - a) * t;
+// Interpolación lineal para Vector2 - CORREGIDA
+Vector2 vectorLerp(Vector2 a, Vector2 b, double t) {
+  return Vector2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+}
 
 // Limita un valor entre mínimo y máximo
 double clamp(double value, double min, double max) => value < min
