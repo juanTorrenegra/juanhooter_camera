@@ -30,6 +30,6 @@ void main() {
           ),
         );
       });
-    }); //inmmersiveSticky removes celphones nav & status bar
+    }); //inmmersiveSticky removes celphones nav & status barr
   });
 }
