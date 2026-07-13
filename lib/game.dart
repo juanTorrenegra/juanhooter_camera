@@ -57,7 +57,7 @@ class MyGame extends FlameGame
   Vector2 currentPlayerPos = Vector2.zero();
   late AudioPool pool;
   double timeScale = 1.0; //game speed!
-  double cameraZoom = 1.3;
+  double cameraZoom = 1.0;
   late InformacionJuego informacionJuego;
 
   late ParallaxComponent spaceParallax;
