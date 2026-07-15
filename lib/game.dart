@@ -19,7 +19,7 @@ import 'package:juanshooter/overlays/informacion_juego.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 import 'package:juanshooter/weapons/enemy_bullet.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
-//tamaño de pantalla = [796.363,392.727]..
+//tamaño de pantalla = [796.363,392.727]....
 // juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
 
 //prototipo
