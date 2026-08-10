@@ -148,7 +148,7 @@ class _VisorOverlayState extends State<VisorOverlay> {
                     shadowColor: Colors.black,
                   ),
                   child: const Text(
-                    'Creditos',
+                    'creditos',
                     style: TextStyle(
                       fontFamily: "Megatrans",
                       fontSize: 18,
@@ -168,7 +168,7 @@ class _VisorOverlayState extends State<VisorOverlay> {
 
 // --------------------------------------------------------a
 // LA CLASE QUE DIBUJA EL VISOR
-// --------------------------------------------------------
+// --------------------------------------------------------a
 class MenuPainter extends CustomPainter {
   //colors
   //Color.fromARGB(255, 255, 164, 164) inner red
