@@ -166,7 +166,7 @@ class _VisorOverlayState extends State<VisorOverlay> {
   }
 }
 
-// --------------------------------------------------------
+// --------------------------------------------------------a
 // LA CLASE QUE DIBUJA EL VISOR
 // --------------------------------------------------------
 class MenuPainter extends CustomPainter {
