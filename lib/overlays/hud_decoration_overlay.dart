@@ -8,18 +8,15 @@ class HudDecorationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // IgnorePointer:este widget no bloquee los botones del hud
+    // IgnorePointer: este widget no bloquee los botones del hud.
+    // SizedBox.expand so the painter uses the game frame size (1280×720),
+    // not MediaQuery (browser size) — that mismatch pulled the right corners left.
     return IgnorePointer(
       child: Material(
         color: Colors.transparent,
-        child: Stack(
-          children: [
-            // Este CustomPaint se dibujará encima del juego pero detrás de otros overlays
-            CustomPaint(
-              painter: _HudDecorationPainter(),
-              size: MediaQuery.of(context).size,
-            ),
-          ],
+        child: CustomPaint(
+          painter: const _HudDecorationPainter(),
+          child: const SizedBox.expand(),
         ),
       ),
     );
@@ -27,59 +24,58 @@ class HudDecorationOverlay extends StatelessWidget {
 }
 
 class _HudDecorationPainter extends CustomPainter {
+  const _HudDecorationPainter();
+
+  static const double _cornerInset = 25;
+  static const double _notchInset = 35;
+  static const double _edgeY = 15;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Color.fromARGB(255, 255, 164, 164)
+      ..color = const Color.fromARGB(255, 255, 164, 164)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.0);
 
-    final glowPaint =
-        Paint() // GLOW (la sombra borrosa cyan)
-          ..color = Color.fromARGB(250, 231, 42, 20)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.0
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
+    final glowPaint = Paint()
+      ..color = const Color.fromARGB(250, 231, 42, 20)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
 
+    final armEndX = size.width / 3;
     final path = Path();
 
-    //linea superior izquierda;
+    // Top-left
+    path
+      ..moveTo(_cornerInset, _cornerInset)
+      ..lineTo(_notchInset, _edgeY)
+      ..lineTo(armEndX, _edgeY);
 
-    path.moveTo(25, 25);
-    path.lineTo(35, 15);
-    path.lineTo(size.width / 3, 15);
+    // Top-right (mirror of top-left)
+    path
+      ..moveTo(size.width - _cornerInset, _cornerInset)
+      ..lineTo(size.width - _notchInset, _edgeY)
+      ..lineTo(size.width - armEndX, _edgeY);
 
-    // Esquina superior derecha
-    path.moveTo(size.width - 25, 25);
-    path.lineTo(size.width - 35, 15);
-    path.lineTo(size.width - size.width / 3, 15);
+    // Bottom-left
+    path
+      ..moveTo(_cornerInset, size.height - _cornerInset)
+      ..lineTo(_notchInset, size.height - _edgeY)
+      ..lineTo(armEndX, size.height - _edgeY);
 
-    // Esquina inferior izquierda
-    path.moveTo(25, size.height - 25);
-    path.lineTo(35, size.height - 15);
-    path.lineTo(size.width / 3, size.height - 15);
-
-    // Esquina inferior derecha
-    path.moveTo(size.width - 25, size.height - 25);
-    path.lineTo(size.width - 35, size.height - 15);
-    path.lineTo(size.width - size.width / 3, size.height - 15);
+    // Bottom-right (mirror of bottom-left)
+    path
+      ..moveTo(size.width - _cornerInset, size.height - _cornerInset)
+      ..lineTo(size.width - _notchInset, size.height - _edgeY)
+      ..lineTo(size.width - armEndX, size.height - _edgeY);
 
     canvas.drawPath(path, paint);
     canvas.drawPath(path, glowPaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _HudDecorationPainter oldDelegate) => false;
 }
-
- //intento de tab Forma L nariz  7.2
-    //path.moveTo(0, size.height / 15);
-    //path.lineTo(size.width / 10, size.height / 15);
-    //path.lineTo(size.width / 8.5, size.height / 8);
-    //path.lineTo(size.width / 6, size.height / 8);
-    //path.lineTo(size.width / 5.5, size.height / 6);
-    //path.lineTo(size.width / 5.5, size.height / 4.5);
-    //path.lineTo(size.width / 8, size.height / 3.2);
-    //path.lineTo(0, size.height / 3.2);

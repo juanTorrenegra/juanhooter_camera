@@ -19,7 +19,7 @@ import 'package:juanshooter/overlays/informacion_juego.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 import 'package:juanshooter/weapons/enemy_bullet.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
-//tamaño de pantalla = [796.363,392.727]....
+// Logical game frame = 1280×720 (16:9). See MyGame.logicalWidth / logicalHeight.
 // juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
 
 //prototipo
@@ -31,6 +31,11 @@ class MyGame extends FlameGame
         flame_events.MouseMovementDetector,
         flame_events.PanDetector {
   MyGame();
+
+  /// Fixed design resolution (16:9). The Flutter shell letterboxes this frame;
+  /// resizing the browser scales it instead of showing more of the world.
+  static const double logicalWidth = 1280;
+  static const double logicalHeight = 720;
 
   /// Tope de vida al empezar una run nueva (menú / partida desde cero).
   static const int basePlayerMaxHitPoints = 100;
@@ -171,6 +176,9 @@ class MyGame extends FlameGame
   }
 
   @override
+  Color backgroundColor() => const Color(0xFF000000);
+
+  @override
   Future<void> onLoad() async {
     await super.onLoad();
     //debugMode = true;
@@ -202,7 +210,10 @@ class MyGame extends FlameGame
 
     spaceParallax = ParallaxComponent(parallax: parallax);
 
-    camara = CameraComponent(
+    // Keep a fixed 1280×720 window into the world even if the canvas changes.
+    camara = CameraComponent.withFixedResolution(
+      width: logicalWidth,
+      height: logicalHeight,
       world: universo,
       backdrop: spaceParallax,
       viewfinder: Viewfinder()
@@ -357,7 +368,7 @@ class MyGame extends FlameGame
     informacionJuego.priority = 1000;
     if (camara?.viewport != null) {
       camara!.viewport.add(informacionJuego);
-      informacionJuego.position = Vector2(10, size.y / 3);
+      informacionJuego.position = Vector2(10, logicalHeight / 3);
     } //sin este if: la tabla se renderiza atras de los demas componentes
 
     currentPlayerPos = player.position.clone();

@@ -26,13 +26,13 @@ class GameOverComponent extends PositionComponent
   Future<void> onLoad() async {
     print('GameOverComponent.onLoad() iniciando...');
     if (game.camara != null) {
-      size = game.camara!.viewport.size;
+      size = game.camara!.viewport.virtualSize.clone();
     } else {
-      size = game.size;
+      size = Vector2(MyGame.logicalWidth, MyGame.logicalHeight);
     }
     if (size.x <= 0 || size.y <= 0) {
       print('Advertencia: tamaño inválido $size, usando tamaño por defecto');
-      size = Vector2(800, 600);
+      size = Vector2(MyGame.logicalWidth, MyGame.logicalHeight);
     }
     position = Vector2.zero();
 
