@@ -33,7 +33,7 @@ class MyGame extends FlameGame
   MyGame();
 
   /// Fixed design resolution (16:9). The Flutter shell letterboxes this frame;
-  /// resizing the browser scales it instead of showing more of the world.
+  /// resizing the browser scales it instead of showing more of the world
   static const double logicalWidth = 1280;
   static const double logicalHeight = 720;
 
