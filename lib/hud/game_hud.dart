@@ -360,7 +360,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     lookJoystick?.position = Vector2(viewSize.x * 7 / 8, joystickY);
     shootButton?.position = Vector2(viewSize.x - 200, 40);
     menu.position = Vector2(viewSize.x / 2 - 15, viewSize.y - 60);
-    healthBar.position = Vector2(200, 100);
+    healthBar.position = Vector2(200, 80);
     debugMenuButton.position = Vector2(10, 40);
   }
 }

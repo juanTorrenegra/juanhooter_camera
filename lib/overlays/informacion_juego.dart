@@ -11,13 +11,13 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
   static const double _valueColumnX = 170.0;
   static const double _skewX = -0.14;
   static const double _borderRadius = 12.0;
-  static const String _fontFamily = 'futuristic1';
+  static const String _fontFamily = 'ava';
 
   late final List<TextComponent> _infoLines;
 
   final TextPaint _labelStyle = TextPaint(
     style: const TextStyle(
-      color: Colors.grey,
+      color: Color.fromARGB(255, 221, 80, 80),
       fontSize: fontSize,
       fontFamily: _fontFamily,
     ),
@@ -36,7 +36,7 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     await super.onLoad();
 
     anchor = Anchor.topLeft;
-    position = Vector2(padding, padding);
+    position = Vector2(80, 220);
 
     _infoLines = [];
 

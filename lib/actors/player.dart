@@ -19,7 +19,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
         priority: 8,
       );
   //double _baseSpeed = 80;;
-  double currentSpeed = 60;
+  double currentSpeed = 50;
   double _angle = 0;
 
   /// Valores por defecto; [MyGame] asigna `playerMaxHitPoints` al cargar / recrear.
