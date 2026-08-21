@@ -245,32 +245,32 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     if (!kIsWeb) {
       movementJoystick = JoystickComponent(
         knob: CircleComponent(
-          radius: 30,
+          radius: 50,
           paint: Paint()
             ..color = Colors.cyan.withAlpha(150)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 0.3,
         ),
         background: CircleComponent(
-          radius: 50,
+          radius: 80,
           paint: Paint()
-            ..color = Colors.cyan.withAlpha(150)
+            ..color = Colors.cyan.withAlpha(50)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 0.3,
         ),
       );
       lookJoystick = JoystickComponent(
         knob: CircleComponent(
-          radius: 30,
+          radius: 50,
           paint: Paint()
             ..color = Colors.cyan.withAlpha(150)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 0.3,
         ),
         background: CircleComponent(
-          radius: 50,
+          radius: 80,
           paint: Paint()
-            ..color = Colors.cyan.withAlpha(150)
+            ..color = Colors.cyan.withAlpha(50)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 0.3,
         ),
@@ -308,8 +308,8 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     healthBar = HealthBar(
       maxHealth: game.player.maxHitPoints,
       currentHealth: game.player.currentHitPoints,
-      width: 200,
-      height: 10,
+      width: 300,
+      height: 40,
     );
 
     debugMenuButton = HudButtonComponent(
@@ -350,26 +350,17 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   void _positionComponents() {
     // HUD lives in the fixed 1280x720 viewport virtual space.
     if (!isLoaded) return;
-    final viewSize = game.camara?.viewport.virtualSize ??
+    final viewSize =
+        game.camara?.viewport.virtualSize ??
         Vector2(MyGame.logicalWidth, MyGame.logicalHeight);
     if (viewSize.x <= 0 || viewSize.y <= 0) return;
 
-    final margin = 40.0; // Ajusta este valor según necesites
-    final joystickSize = 150.0; // Tamaño del joystick (radio + margen)
-    movementJoystick?.position = Vector2(
-      margin + joystickSize / 2,
-      viewSize.y - margin - joystickSize / 2,
-    );
-    lookJoystick?.position = Vector2(
-      viewSize.x - margin - joystickSize / 2,
-      viewSize.y - margin - joystickSize / 2,
-    );
-    shootButton?.position = Vector2(viewSize.x - 160, 20);
+    final joystickY = viewSize.y * 3 / 4;
+    movementJoystick?.position = Vector2(viewSize.x * 1 / 8, joystickY);
+    lookJoystick?.position = Vector2(viewSize.x * 7 / 8, joystickY);
+    shootButton?.position = Vector2(viewSize.x - 200, 40);
     menu.position = Vector2(viewSize.x / 2 - 15, viewSize.y - 60);
-    healthBar.position = Vector2(
-      (viewSize.x - healthBar.layoutWidth) / 2,
-      20,
-    );
+    healthBar.position = Vector2(200, 100);
     debugMenuButton.position = Vector2(10, 40);
   }
 }

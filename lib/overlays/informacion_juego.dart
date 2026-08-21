@@ -1,45 +1,45 @@
 import 'package:flame/components.dart';
 import 'package:flame/text.dart';
-import 'package:flame/game.dart';
-import 'package:flutter/material.dart';
-import 'package:juanshooter/actors/player.dart';
+import 'package:flutter/material.dart' hide Matrix4;
 import 'package:juanshooter/game.dart';
-import 'package:juanshooter/hud/game_hud.dart';
+import 'package:vector_math/vector_math_64.dart' as vm;
 
 class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
-  // Configuración
-  static const double padding = 8.0;
-  static const double fontSize = 9.0;
-  static const double lineHeight = 10.0;
-
-  // Text components
+  static const double padding = 16.0;
+  static const double fontSize = 18.0;
+  static const double lineHeight = 20.0;
+  static const double _valueColumnX = 170.0;
+  static const double _skewX = -0.14;
+  static const double _borderRadius = 12.0;
+  static const String _fontFamily = 'futuristic1';
 
   late final List<TextComponent> _infoLines;
 
   final TextPaint _labelStyle = TextPaint(
-    style: TextStyle(color: Colors.grey, fontSize: fontSize),
+    style: const TextStyle(
+      color: Colors.grey,
+      fontSize: fontSize,
+      fontFamily: _fontFamily,
+    ),
   );
 
   final TextPaint _valueStyle = TextPaint(
     style: TextStyle(
       color: Colors.cyan.withAlpha(200),
       fontSize: fontSize,
-      //fontWeight: FontWeight.bold,
+      fontFamily: _fontFamily,
     ),
   );
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
+    await super.onLoad();
 
-    // Configurar posición y tamaño
     anchor = Anchor.topLeft;
     position = Vector2(padding, padding);
 
-    // Crear líneas de información
     _infoLines = [];
 
-    // Vida del jugador
     _infoLines.add(
       _createInfoLine(
         index: 0,
@@ -48,7 +48,6 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
       ),
     );
 
-    // Posición
     _infoLines.add(
       _createInfoLine(
         index: 1,
@@ -58,7 +57,6 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
       ),
     );
 
-    // Naves destruidas
     _infoLines.add(
       _createInfoLine(
         index: 2,
@@ -67,7 +65,6 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
       ),
     );
 
-    // Time Scale
     _infoLines.add(
       _createInfoLine(
         index: 3,
@@ -76,7 +73,6 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
       ),
     );
 
-    // Estado del juego
     _infoLines.add(
       _createInfoLine(
         index: 4,
@@ -101,11 +97,7 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
       ),
     );
 
-    // Calcular tamaño del componente
     _calculateSize();
-
-    // Configurar fondo
-    _createBackground();
   }
 
   TextComponent _createInfoLine({
@@ -115,103 +107,94 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
   }) {
     final yPosition = padding + (index * lineHeight);
 
-    // Crear label
-    final labelComponent = TextComponent(
-      text: '$label: ',
-      textRenderer: _labelStyle,
-      position: Vector2(4, yPosition),
+    add(
+      TextComponent(
+        text: '$label: ',
+        textRenderer: _labelStyle,
+        position: Vector2(padding, yPosition),
+      ),
     );
-    add(labelComponent);
 
-    // Crear value
     final valueComponent = TextComponent(
       text: value,
       textRenderer: _valueStyle,
-      position: Vector2(80, yPosition),
+      position: Vector2(_valueColumnX, yPosition),
     );
     add(valueComponent);
 
-    return valueComponent; // Devolvemos el value para poder actualizarlo
+    return valueComponent;
   }
 
   void _calculateSize() {
-    double maxWidth = 130;
-    double totalHeight = 80;
-
-    size = Vector2(maxWidth, totalHeight);
+    final totalHeight = padding * 2 + _infoLines.length * lineHeight;
+    size = Vector2(320, totalHeight);
   }
 
-  void _createBackground() {
-    final background = RectangleComponent(
-      size: size,
-      position: Vector2.zero(),
-      paint: Paint()
-        ..color = Colors.cyan.withAlpha(20)
-        ..style = PaintingStyle.fill,
+  @override
+  void render(Canvas canvas) {
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.x, size.y),
+      const Radius.circular(_borderRadius),
     );
 
-    // Añadir borde
-    final border = RectangleComponent(
-      size: size,
-      position: Vector2.zero(),
-      paint: Paint()
-        ..color = Colors.cyan.withAlpha(80)
+    canvas.drawRRect(rrect, Paint()..color = Colors.black.withAlpha(45));
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..color = Colors.black
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0,
+        ..strokeWidth = 3,
     );
 
-    // Añadir al inicio (al fondo)
-    addAll([background]);
+    super.render(canvas);
+  }
+
+  @override
+  void renderTree(Canvas canvas) {
+    canvas.save();
+    canvas.transform(vm.Matrix4.skewX(_skewX).storage);
+    super.renderTree(canvas);
+    canvas.restore();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-
-    // Actualizar valores en tiempo real
     _updateInfoValues();
   }
 
   void _updateInfoValues() {
-    // Vida del jugador
-    if (_infoLines.length > 0) {
-      _infoLines[0].text =
-          '${game.player.currentHitPoints}/${game.player.maxHitPoints}';
-    }
+    if (_infoLines.isEmpty) return;
 
-    // Posición
+    _infoLines[0].text =
+        '${game.player.currentHitPoints}/${game.player.maxHitPoints}';
+
     if (_infoLines.length > 1) {
       _infoLines[1].text =
           '${game.player.position.x.toStringAsFixed(0)}, ${game.player.position.y.toStringAsFixed(0)}';
     }
 
-    // Naves destruidas
     if (_infoLines.length > 2) {
       _infoLines[2].text = '${game.shipsDestroyed}';
     }
 
-    // Time Scale
     if (_infoLines.length > 3) {
       _infoLines[3].text = '${game.timeScale.toStringAsFixed(2)}x';
     }
 
-    // Estado del juego
     if (_infoLines.length > 4) {
       _infoLines[4].text = game.paused ? 'PAUSADO' : 'ACTIVO';
     }
 
-    // Velocidad
     if (_infoLines.length > 5) {
       _infoLines[5].text = game.player.currentSpeed.toStringAsFixed(0);
     }
 
-    // Zoom (mismo valor que `MyGame.cameraZoom` / viewfinder)
     if (_infoLines.length > 6) {
       _infoLines[6].text = '${game.cameraZoom.toStringAsFixed(2)}x';
     }
   }
 
-  // Método para mostrar/ocultar
   void toggleVisibility() {
     if (isMounted) {
       removeFromParent();
@@ -220,7 +203,6 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     }
   }
 
-  // Método para cambiar posición
   void setPosition(Vector2 newPosition) {
     position = newPosition;
   }

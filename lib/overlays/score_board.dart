@@ -20,7 +20,7 @@ class _ScoreBoardState extends State<ScoreBoard>
   int _currentScore = 0;
   bool _showMedalAnimation = false;
 
-  static const double _baseFontSize = 36;
+  static const double _baseFontSize = 72;
 
   /// Horizontal skew (radians-ish via Matrix4) for a slanted score panel.
   static const double _panelSkewX = -0.14;
@@ -137,16 +137,16 @@ class _ScoreBoardState extends State<ScoreBoard>
             transform: Matrix4.skewX(_panelSkewX),
             alignment: Alignment.center,
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 color: Colors.black.withAlpha(45 + (g * 35).round()),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.black, width: 1.5 + g * 4),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.black, width: 3 + g * 4),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.cyan.withOpacity(0.15 + 0.75 * g),
-                    blurRadius: 6 + 48 * g,
-                    spreadRadius: 1 + 14 * g,
+                    blurRadius: 12 + 48 * g,
+                    spreadRadius: 2 + 14 * g,
                   ),
                 ],
               ),
@@ -162,7 +162,7 @@ class _ScoreBoardState extends State<ScoreBoard>
                       shadows: [
                         Shadow(
                           color: Colors.cyan.withOpacity(0.35 * g),
-                          blurRadius: 4 + 18 * g,
+                          blurRadius: 8 + 18 * g,
                         ),
                       ],
                     ),
