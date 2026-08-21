@@ -46,15 +46,7 @@ class MyGame extends FlameGame
   final ValueNotifier<int> scoreNotifier = ValueNotifier<int>(0);
   int shipsDestroyed = 0;
   late Player player;
-  late RangedEnemy mineroTorretas;
-  late RangedEnemy enemigo1;
-  late Enemigo enemigo2;
-  late Enemigo enemigo3;
-  late Enemigo enemigo4;
-  late Enemigo enemigo5;
-  late Enemigo enemigo6;
-  late Enemigo enemigo7;
-  late Enemigo enemigo8;
+  late RangedEnemy enemigo2;
 
   late final GameHud hud;
   late final World universo;
@@ -231,31 +223,6 @@ class MyGame extends FlameGame
     player.currentHitPoints = playerMaxHitPoints;
     universo.add(player);
 
-    mineroTorretas = RangedEnemy(
-      sprite: await Sprite.load('5.png'), //MINERO
-      position: Vector2(1300, 400),
-      size: Vector2(530, 300),
-      maxHitPoints: 20,
-      rotationSpeed: 0.4,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 40,
-    );
-
-    universo.add(mineroTorretas);
-
-    enemigo1 = RangedEnemy(
-      sprite: await Sprite.load('bite30x24.png'),
-      position: Vector2(850, 400),
-      size: Vector2(30, 24),
-      maxHitPoints: 10,
-      rotationSpeed: 3.0,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
-    );
-    universo.add(enemigo1);
-
     enemigo2 = RangedEnemy(
       sprite: await Sprite.load('verdePequeno.png'),
       position: Vector2(440, 380),
@@ -267,98 +234,6 @@ class MyGame extends FlameGame
       damage: 10,
     );
     universo.add(enemigo2);
-
-    enemigo6 = RangedEnemy(
-      sprite: await Sprite.load('verdePequenoPink.png'), //
-      position: Vector2(200, 390),
-      size: Vector2(18, 16),
-      rotationSpeed: 4.0,
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
-    );
-    universo.add(enemigo6);
-
-    enemigo7 = RangedEnemy(
-      sprite: await Sprite.load('azulCanon.png'),
-      position: Vector2(100, 440),
-      size: Vector2(18, 16),
-      rotationSpeed: 4.0,
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
-    );
-    universo.add(enemigo7);
-
-    enemigo8 = RangedEnemy(
-      sprite: await Sprite.load('verdeMediano.png'),
-      position: Vector2(350, 270),
-      size: Vector2(30, 25),
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
-    );
-    universo.add(enemigo8);
-
-    enemigo4 = RangedEnemy(
-      sprite: await Sprite.load('7B.png'),
-      position: Vector2(750, 550),
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
-    );
-    universo.add(enemigo4);
-
-    enemigo5 = RangedEnemy(
-      sprite: await Sprite.load('verdeGrande.png'),
-      position: Vector2(380, 450),
-      //size: Vector2(134, 199),
-    );
-    universo.add(enemigo5);
-
-    // Grupo de SpikeEnemy para pruebas (mismo sprite, distinta curva)
-    final spikeSprite = await Sprite.load('verdePequeno.png');
-    final spikeA = SpikeEnemy(
-      sprite: spikeSprite,
-      position: Vector2(560, 420),
-      size: Vector2(18, 16),
-      movementSpeed: 70,
-      rotationSpeed: 1.4,
-      damage: 40,
-      // Low curve preset.
-      curveStrength: 0.18,
-      chargeDuration: 2.0,
-      bullRushSpeed: 230,
-    );
-    final spikeB = SpikeEnemy(
-      sprite: spikeSprite,
-      position: Vector2(595, 430),
-      size: Vector2(18, 16),
-      movementSpeed: 70,
-      rotationSpeed: 1.4,
-      damage: 40,
-      // Medium curve preset.
-      curveStrength: 0.38,
-      chargeDuration: 2.0,
-      bullRushSpeed: 230,
-    );
-    final spikeC = SpikeEnemy(
-      sprite: spikeSprite,
-      position: Vector2(630, 420),
-      size: Vector2(18, 16),
-      movementSpeed: 70,
-      rotationSpeed: 1.4,
-      damage: 40,
-      // High curve preset.
-      curveStrength: 0.62,
-      chargeDuration: 2.0,
-      bullRushSpeed: 230,
-    );
-    universo.addAll([spikeA, spikeB, spikeC]);
 
     hud = GameHud()..priority = 100;
     scoreNotifier.value = shipsDestroyed;
