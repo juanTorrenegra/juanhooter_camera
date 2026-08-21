@@ -161,9 +161,10 @@ class HealthBar extends PositionComponent with HasGameReference<MyGame> {
 }
 
 class GameHud extends PositionComponent with HasGameReference<MyGame> {
-  late final JoystickComponent movementJoystick;
-  late final JoystickComponent lookJoystick;
-  late final HudButtonComponent shootButton;
+  /// Touch controls: only created on mobile/desktop apps, never on web.
+  JoystickComponent? movementJoystick;
+  JoystickComponent? lookJoystick;
+  HudButtonComponent? shootButton;
   late final HudButtonComponent menu;
   late final HealthBar healthBar;
   late final HudButtonComponent debugMenuButton;
@@ -175,24 +176,32 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
 
   bool _spaceWasDown = false;
 
-  /// Movimiento efectivo: en web, WASD tiene prioridad sobre el joystick; si no hay teclas, se usa el joystick.
+  /// Movimiento: WASD en web; joysticks en app.
   Vector2 get effectiveMovementDelta {
-    if (kIsWeb && _keyboardMovement.length2 > 0.0001) {
-      return _keyboardMovement;
+    if (kIsWeb) {
+      if (_keyboardMovement.length2 > 0.0001) {
+        return _keyboardMovement;
+      }
+      return Vector2.zero();
     }
-    if (movementJoystick.direction != JoystickDirection.idle) {
-      return movementJoystick.relativeDelta;
+    final joystick = movementJoystick;
+    if (joystick != null && joystick.direction != JoystickDirection.idle) {
+      return joystick.relativeDelta;
     }
     return Vector2.zero();
   }
 
-  /// Rotación efectiva: en web usa mouse; fuera de web usa look joystick.
+  /// Rotación: mouse en web; look joystick en app.
   Vector2 get effectiveLookDelta {
-    if (kIsWeb && _hasWebMouseLookDelta && _webMouseLookDelta.length2 > 0.0001) {
-      return _webMouseLookDelta;
+    if (kIsWeb) {
+      if (_hasWebMouseLookDelta && _webMouseLookDelta.length2 > 0.0001) {
+        return _webMouseLookDelta;
+      }
+      return Vector2.zero();
     }
-    if (lookJoystick.direction != JoystickDirection.idle) {
-      return lookJoystick.relativeDelta;
+    final joystick = lookJoystick;
+    if (joystick != null && joystick.direction != JoystickDirection.idle) {
+      return joystick.relativeDelta;
     }
     return Vector2.zero();
   }
@@ -233,48 +242,50 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
 
   @override
   Future<void> onLoad() async {
-    movementJoystick = JoystickComponent(
-      knob: CircleComponent(
-        radius: 30,
-        paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.3,
-      ),
-      background: CircleComponent(
-        radius: 50,
-        paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.3,
-      ),
-    );
-    lookJoystick = JoystickComponent(
-      knob: CircleComponent(
-        radius: 30,
-        paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.3,
-      ),
-      background: CircleComponent(
-        radius: 50,
-        paint: Paint()
-          ..color = Colors.cyan.withAlpha(150)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.3,
-      ),
-    );
-    shootButton = HudButtonComponent(
-      button: CircleComponent(
-        radius: 40,
-        paint: Paint()
-          ..color = Colors.cyan.withAlpha(50)
-          ..style = PaintingStyle.fill
-          ..strokeWidth = 0.3,
-      ),
-      onPressed: () => game.player.shoot(),
-    );
+    if (!kIsWeb) {
+      movementJoystick = JoystickComponent(
+        knob: CircleComponent(
+          radius: 30,
+          paint: Paint()
+            ..color = Colors.cyan.withAlpha(150)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.3,
+        ),
+        background: CircleComponent(
+          radius: 50,
+          paint: Paint()
+            ..color = Colors.cyan.withAlpha(150)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.3,
+        ),
+      );
+      lookJoystick = JoystickComponent(
+        knob: CircleComponent(
+          radius: 30,
+          paint: Paint()
+            ..color = Colors.cyan.withAlpha(150)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.3,
+        ),
+        background: CircleComponent(
+          radius: 50,
+          paint: Paint()
+            ..color = Colors.cyan.withAlpha(150)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.3,
+        ),
+      );
+      shootButton = HudButtonComponent(
+        button: CircleComponent(
+          radius: 40,
+          paint: Paint()
+            ..color = Colors.cyan.withAlpha(50)
+            ..style = PaintingStyle.fill
+            ..strokeWidth = 0.3,
+        ),
+        onPressed: () => game.player.shoot(),
+      );
+    }
 
     menu = HudButtonComponent(
       button: TextComponent(
@@ -314,9 +325,12 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     );
 
     add(menu);
-    add(movementJoystick);
-    add(lookJoystick);
-    add(shootButton);
+    final move = movementJoystick;
+    final look = lookJoystick;
+    final shoot = shootButton;
+    if (move != null) add(move);
+    if (look != null) add(look);
+    if (shoot != null) add(shoot);
     add(healthBar);
     add(debugMenuButton);
 
@@ -342,15 +356,15 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
 
     final margin = 40.0; // Ajusta este valor según necesites
     final joystickSize = 150.0; // Tamaño del joystick (radio + margen)
-    movementJoystick.position = Vector2(
+    movementJoystick?.position = Vector2(
       margin + joystickSize / 2,
       viewSize.y - margin - joystickSize / 2,
     );
-    lookJoystick.position = Vector2(
+    lookJoystick?.position = Vector2(
       viewSize.x - margin - joystickSize / 2,
       viewSize.y - margin - joystickSize / 2,
     );
-    shootButton.position = Vector2(viewSize.x - 160, 20);
+    shootButton?.position = Vector2(viewSize.x - 160, 20);
     menu.position = Vector2(viewSize.x / 2 - 15, viewSize.y - 60);
     healthBar.position = Vector2(
       (viewSize.x - healthBar.layoutWidth) / 2,

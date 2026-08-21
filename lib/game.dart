@@ -34,7 +34,7 @@ class MyGame extends FlameGame
 
   /// Fixed design resolution (16:9). The Flutter shell letterboxes this frame;
   /// resizing the browser scales it instead of showing more of the world
-  static const double logicalWidth = 1280;
+  static const double logicalWidth = 1560;
   static const double logicalHeight = 720;
 
   /// Tope de vida al empezar una run nueva (menú / partida desde cero).
@@ -580,11 +580,11 @@ class MyGame extends FlameGame
     print('🖥️ Reseteando HUD...');
 
     if (hud != null) {
-      // Resetear joysticks
-      hud.movementJoystick.knob?.position =
-          hud.movementJoystick.background?.position ?? Vector2.zero();
-      hud.lookJoystick.knob?.position =
-          hud.lookJoystick.background?.position ?? Vector2.zero();
+      // Resetear joysticks (solo existen en la versión app)
+      hud.movementJoystick?.knob?.position =
+          hud.movementJoystick?.background?.position ?? Vector2.zero();
+      hud.lookJoystick?.knob?.position =
+          hud.lookJoystick?.background?.position ?? Vector2.zero();
 
       // Actualizar barra de vida
       hud.updateHealthBar(player.currentHitPoints, player.maxHitPoints);
