@@ -6,15 +6,18 @@ import 'package:juanshooter/game.dart';
 
 class Bullet extends SpriteComponent with HasGameReference<MyGame> {
   final double speed;
+  final int damage;
   final Vector2 _direction = Vector2.zero();
 
   Bullet({
     required Vector2 position,
     required double angle,
     required this.speed,
+    this.damage = 4,
+    double sizeScale = 1,
   }) : super(
          position: position,
-         size: Vector2(28, 15),
+         size: Vector2(28, 15) * sizeScale,
          anchor: Anchor.center,
          angle: angle + 0,
        ) {

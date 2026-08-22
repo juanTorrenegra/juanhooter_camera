@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
 import 'package:juanshooter/game.dart';
+import 'package:juanshooter/hud/potency_bar.dart';
 import 'package:juanshooter/weapons/bullet.dart';
-import 'package:juanshooter/utils/game_utils.dart';
 
 abstract class Enemigo extends SpriteComponent
     with HasGameReference<MyGame>, CollisionCallbacks {
@@ -99,13 +99,23 @@ abstract class Enemigo extends SpriteComponent
     super.onCollisionStart(intersectionPoints, other);
 
     if (other is Bullet) {
-      _takeDamage(1);
+      _showDamagePopup(other.damage);
+      _takeDamage(other.damage);
       other.removeFromParent();
 
       if (!_isActivated) {
         activate();
       }
     }
+  }
+
+  void _showDamagePopup(int damage) {
+    game.universo.add(
+      DamagePopup(
+        worldPosition: position.clone() + Vector2(0, -size.y * 0.6),
+        damage: damage,
+      ),
+    );
   }
 
   void _takeDamage(int damage) {

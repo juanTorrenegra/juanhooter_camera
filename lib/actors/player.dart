@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
 import 'package:juanshooter/game.dart';
+import 'package:juanshooter/hud/potency_bar.dart';
 import 'package:juanshooter/overlays/game_over.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 import 'package:juanshooter/utils/game_utils.dart';
@@ -21,6 +22,8 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   //double _baseSpeed = 80;;
   double currentSpeed = 60;
   double _angle = 0;
+  bool _isChargeSlowed = false;
+  double _speedBeforeCharge = 60;
 
   /// Valores por defecto; [MyGame] asigna `playerMaxHitPoints` al cargar / recrear.
   int maxHitPoints = 100;
@@ -65,10 +68,30 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     game.hud.updateHealthBar(currentHitPoints, maxHitPoints);
   }
 
+  void applyChargeSlowdown() {
+    if (_isChargeSlowed || _isDying) return;
+    _speedBeforeCharge = currentSpeed;
+    currentSpeed = (currentSpeed - ChargeShot.speedPenalty).clamp(
+      1.0,
+      currentSpeed,
+    );
+    _isChargeSlowed = true;
+  }
+
+  void restoreChargeSpeed() {
+    if (!_isChargeSlowed) return;
+    currentSpeed = _speedBeforeCharge;
+    _isChargeSlowed = false;
+  }
+
   void die() {
     if (_isDying) return; // ✅ Evitar múltiples llamadas
 
     _isDying = true;
+    restoreChargeSpeed();
+    if (game.hud.isLoaded) {
+      game.hud.cancelCharge();
+    }
     print("Player died! Starting death sequence...");
 
     // ✅ Detener enemigos activos y limpiar balas enemigas para el reset
@@ -168,7 +191,8 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     isVisible = true;
 
     // Restaurar velocidad
-    currentSpeed = 80;
+    restoreChargeSpeed();
+    currentSpeed = 50;
 
     // Restaurar posición y rotación
     position = Vector2(380, 380);
@@ -240,7 +264,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     }
   }
 
-  void shoot() {
+  void shoot({int damage = 4, double sizeScale = 1}) {
     if (_isDying) return;
     final shootPosition = calculateShootPosition(
       position,
@@ -249,7 +273,13 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       10.0, // Offset adicional desde el borde
     );
 
-    final bullet = Bullet(position: shootPosition, angle: angle, speed: 100);
+    final bullet = Bullet(
+      position: shootPosition,
+      angle: angle,
+      speed: 100,
+      damage: damage,
+      sizeScale: sizeScale,
+    );
     game.universo.add(bullet);
     game.pool.start();
   }

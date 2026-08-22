@@ -225,7 +225,7 @@ class MyGame extends FlameGame
       sprite: await Sprite.load('verdePequeno.png'),
       position: Vector2(440, 380),
       size: Vector2(16, 16),
-      maxHitPoints: 10,
+      maxHitPoints: 200,
       rotationSpeed: 3.0,
       bulletSpeed: 50,
       shootingThreshold: 30,
@@ -278,8 +278,35 @@ class MyGame extends FlameGame
   @override
   void onPanDown(flame_events.DragDownInfo info) {
     super.onPanDown(info);
-    if (!kIsWeb || paused || !player.isMounted) return;
-    player.shoot();
+    if (!kIsWeb || paused || !player.isMounted || !hud.isLoaded) return;
+    hud.beginCharge();
+    final worldTarget = camara?.globalToLocal(info.eventPosition.widget);
+    if (worldTarget != null) {
+      hud.setWebMouseWorldTarget(worldTarget);
+    }
+  }
+
+  @override
+  void onPanUpdate(flame_events.DragUpdateInfo info) {
+    super.onPanUpdate(info);
+    if (!kIsWeb || camara == null || !hud.isLoaded) return;
+    hud.setWebMouseWorldTarget(
+      camara!.globalToLocal(info.eventPosition.widget),
+    );
+  }
+
+  @override
+  void onPanEnd(flame_events.DragEndInfo info) {
+    super.onPanEnd(info);
+    if (!kIsWeb || !hud.isLoaded) return;
+    hud.releaseCharge();
+  }
+
+  @override
+  void onPanCancel() {
+    super.onPanCancel();
+    if (!kIsWeb || !hud.isLoaded) return;
+    hud.releaseCharge();
   }
 
   @override
@@ -436,6 +463,7 @@ class MyGame extends FlameGame
     print('🖥️ Reseteando HUD...');
 
     if (hud != null) {
+      hud.cancelCharge();
       // Resetear joysticks (solo existen en la versión app)
       hud.movementJoystick?.knob?.position =
           hud.movementJoystick?.background?.position ?? Vector2.zero();
@@ -451,6 +479,10 @@ class MyGame extends FlameGame
 
   Future<void> recreatePlayer() async {
     print('👤 Recreando jugador...');
+
+    if (hud.isLoaded) {
+      hud.cancelCharge();
+    }
 
     // Detener cualquier enemigo que estuviera disparando al jugador anterior
     deactivateAllEnemies();
