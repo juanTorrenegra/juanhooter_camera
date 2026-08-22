@@ -3,6 +3,7 @@ import 'package:flame/events.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 
+//este boton solo es usado en game_over.dart
 class GameButton extends PositionComponent with TapCallbacks, HasGameReference {
   final String text;
   final VoidCallback onPressed;
@@ -29,15 +30,9 @@ class GameButton extends PositionComponent with TapCallbacks, HasGameReference {
   }) : super(position: position, size: size);
 
   static List<Shadow> _cyanTextGlow() => [
-        Shadow(
-          color: Colors.cyanAccent.withOpacity(0.95),
-          blurRadius: 14,
-        ),
-        Shadow(
-          color: Colors.cyan.withOpacity(0.65),
-          blurRadius: 22,
-        ),
-      ];
+    Shadow(color: Colors.cyanAccent.withOpacity(0.95), blurRadius: 14),
+    Shadow(color: Colors.cyan.withOpacity(0.65), blurRadius: 22),
+  ];
 
   @override
   Future<void> onLoad() async {

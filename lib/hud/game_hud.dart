@@ -113,7 +113,8 @@ class HealthBar extends PositionComponent with HasGameReference<MyGame> {
       Rect.fromLTWH(0, 0, width, height),
       Radius.circular(borderRadius),
     );
-    final backgroundPaint = Paint()..color = Colors.red.withAlpha(150);
+    final backgroundPaint = Paint()
+      ..color = const Color.fromARGB(88, 244, 54, 54).withAlpha(150);
 
     final healthPercentage = maxHealth > 0
         ? (currentHealth / maxHealth).clamp(0.0, 1.0)
@@ -139,7 +140,7 @@ class HealthBar extends PositionComponent with HasGameReference<MyGame> {
   }
 
   Color _getHealthColor(double percentage) {
-    if (percentage > 0.6) return Colors.cyanAccent;
+    if (percentage > 0.6) return const Color.fromARGB(130, 24, 255, 255);
     if (percentage > 0.3) return Colors.orange;
     return Colors.red;
   }
@@ -371,6 +372,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     menu.position = Vector2(viewSize.x / 2 - 15, viewSize.y - 60);
     healthBar.position = Vector2(200, 100);
     debugMenuButton.position = Vector2(10, 40);
-    informacionJuego.position = Vector2(20, 300);
+    informacionJuego.position = Vector2(80, 260);
   }
 }
