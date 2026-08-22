@@ -15,7 +15,6 @@ import 'package:juanshooter/actors/spike_enemy.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:juanshooter/overlays/game_over.dart';
-import 'package:juanshooter/overlays/informacion_juego.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 import 'package:juanshooter/weapons/enemy_bullet.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
@@ -55,7 +54,6 @@ class MyGame extends FlameGame
   late AudioPool pool;
   double timeScale = 1.0; //game speed!
   double cameraZoom = 1.9;
-  late InformacionJuego informacionJuego;
 
   late ParallaxComponent spaceParallax;
   double spikeCurveStrength = 0.35;
@@ -239,26 +237,9 @@ class MyGame extends FlameGame
     scoreNotifier.value = shipsDestroyed;
     camara?.viewport.add(hud);
 
-    informacionJuego = InformacionJuego();
-    informacionJuego.priority = 1000;
-    if (camara?.viewport != null) {
-      camara!.viewport.add(informacionJuego);
-      informacionJuego.position = Vector2(10, logicalHeight / 3);
-    } //sin este if: la tabla se renderiza atras de los demas componentes
-
     currentPlayerPos = player.position.clone();
 
     camara?.follow(player);
-  }
-
-  // Método para mostrar/ocultar información
-  void toggleGameInfo() {
-    informacionJuego.toggleVisibility();
-  }
-
-  // Método para actualizar información específica
-  void updateGameInfo() {
-    // Se actualiza automáticamente en el update del componente
   }
 
   @override

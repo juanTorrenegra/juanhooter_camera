@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Matrix4;
 import 'package:flutter/services.dart';
 import 'package:juanshooter/game.dart';
+import 'package:juanshooter/overlays/informacion_juego.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 class HealthBar extends PositionComponent with HasGameReference<MyGame> {
@@ -168,6 +169,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final HudButtonComponent menu;
   late final HealthBar healthBar;
   late final HudButtonComponent debugMenuButton;
+  late final InformacionJuego informacionJuego;
 
   /// Web (WASD): dirección normalizada; en otras plataformas permanece en cero.
   final Vector2 _keyboardMovement = Vector2.zero();
@@ -324,6 +326,8 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       },
     );
 
+    informacionJuego = InformacionJuego()..priority = 1000;
+
     add(menu);
     final move = movementJoystick;
     final look = lookJoystick;
@@ -333,8 +337,13 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     if (shoot != null) add(shoot);
     add(healthBar);
     add(debugMenuButton);
+    add(informacionJuego);
 
     _positionComponents();
+  }
+
+  void toggleGameInfo() {
+    informacionJuego.toggleVisibility();
   }
 
   void updateHealthBar(int currentHealth, int maxHealth) {
@@ -362,5 +371,6 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     menu.position = Vector2(viewSize.x / 2 - 15, viewSize.y - 60);
     healthBar.position = Vector2(200, 100);
     debugMenuButton.position = Vector2(10, 40);
+    informacionJuego.position = Vector2(20, 300);
   }
 }

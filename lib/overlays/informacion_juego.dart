@@ -36,7 +36,6 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     await super.onLoad();
 
     anchor = Anchor.topLeft;
-    position = Vector2(padding, padding);
 
     _infoLines = [];
 
@@ -141,9 +140,8 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     canvas.drawRRect(
       rrect,
       Paint()
-        ..color = Colors.black
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
+        ..color = const Color.fromARGB(125, 168, 31, 31)
+        ..style = PaintingStyle.fill,
     );
 
     super.render(canvas);
@@ -199,7 +197,7 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     if (isMounted) {
       removeFromParent();
     } else {
-      game.camara?.viewport.add(this);
+      game.hud.add(this);
     }
   }
 
