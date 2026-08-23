@@ -58,25 +58,25 @@ class MyGame extends FlameGame
   static const double knockbackCameraHoldSeconds = 2.0;
 
   /// Max look-ahead offset; actual cap is also the visible viewport inset.
-  static const double cameraOuterRadius = 170;
+  static const double cameraOuterRadius = 100;
 
   /// Rest deadzone: after idle, camera eases here and then stays (not centered).
   static const double cameraInnerRadius = 25;
 
   /// World-unit padding so the ship cannot reach the viewport edge.
-  static const double cameraViewportMargin = 48;
+  static const double cameraViewportMargin = 60;
 
   /// Seconds to wait after thrust stops before easing back to [cameraInnerRadius].
   static const double cameraIdleWaitSeconds = 2.0;
 
   /// Extra viewfinder speed along travel so the camera slowly leads the ship.
-  static const double cameraLookAheadDrift = 8;
+  static const double cameraLookAheadDrift = 4;
 
   /// Viewfinder speed when returning toward the inner deadzone.
   static const double cameraReturnSpeed = 35;
 
   /// World units per second for knockback slides (player and enemies).
-  double knockbackSpeed = 140;
+  double knockbackSpeed = 80;
   double _knockbackCameraHoldRemaining = 0;
   double _cameraIdleTimer = 0;
   final Vector2 _cameraLookDir = Vector2.zero();
@@ -388,7 +388,7 @@ class MyGame extends FlameGame
 
     enemigo2 = RangedEnemy(
       sprite: await Sprite.load('verdePequeno.png'),
-      position: Vector2(440, 380),
+      position: Vector2(660, 380),
       size: Vector2(16, 16),
       maxHitPoints: 200,
       rotationSpeed: 3.0,
@@ -400,12 +400,38 @@ class MyGame extends FlameGame
 
     universo.add(
       CrabEnemy(
-        sprite: await Sprite.load('verdePequeno.png'),
+        sprite: await Sprite.load('enemigo.png'),
         position: Vector2(550, 350),
         size: Vector2(16, 16),
         maxHitPoints: 50,
         rotationSpeed: 4.0,
         damage: 30,
+      ),
+    );
+
+    final rangedSprite = await Sprite.load('10.png');
+    universo.add(
+      RangedEnemy(
+        sprite: rangedSprite,
+        position: Vector2(620, 330),
+        size: Vector2(20, 20),
+        maxHitPoints: 40,
+        rotationSpeed: 3.0,
+        bulletSpeed: 50,
+        shootingThreshold: 30,
+        damage: 10,
+      ),
+    );
+    universo.add(
+      RangedEnemy(
+        sprite: rangedSprite,
+        position: Vector2(630, 385),
+        size: Vector2(20, 20),
+        maxHitPoints: 40,
+        rotationSpeed: 3.0,
+        bulletSpeed: 50,
+        shootingThreshold: 30,
+        damage: 10,
       ),
     );
 

@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
+import 'package:flame/text.dart';
+import 'package:flutter/material.dart';
 import 'package:juanshooter/game.dart';
 import 'package:juanshooter/hud/potency_bar.dart';
 import 'package:juanshooter/weapons/bullet.dart';
@@ -13,7 +15,12 @@ abstract class Enemigo extends SpriteComponent
   final int shield;
   final double movementSpeed;
   final double rotationSpeed;
+  final double alarmRadius;
+
+  /// Player in this ring (outside [alarmRadius]) shows a blinking `!`.
+  final double warningRadius;
   bool _isActivated = false;
+  AlarmWarningMark? _warningMark;
 
   bool get isActivated => _isActivated;
 
@@ -26,6 +33,8 @@ abstract class Enemigo extends SpriteComponent
     this.shield = 0,
     this.movementSpeed = 0,
     this.rotationSpeed = 1.0, // ✅ Velocidad de rotación base
+    this.alarmRadius = 100,
+    this.warningRadius = 180,
   }) : hitPoints = maxHitPoints,
        maxHitPoints = maxHitPoints,
        super(
@@ -44,16 +53,71 @@ abstract class Enemigo extends SpriteComponent
   @override
   void update(double dt) {
     super.update(dt);
+    if (!_isActivated) {
+      _updateProximityState();
+    } else {
+      _hideWarning();
+    }
     if (_isActivated) {
       onUpdateBehavior(dt);
+    } else {
+      onIdleBehavior(dt);
     }
+  }
+
+  void _updateProximityState() {
+    if (!game.player.isMounted) {
+      _hideWarning();
+      return;
+    }
+    final dist = position.distanceTo(game.player.position);
+    if (alarmRadius > 0 && dist <= alarmRadius) {
+      activate();
+      return;
+    }
+    if (warningRadius > alarmRadius && dist <= warningRadius) {
+      _showWarning();
+    } else {
+      _hideWarning();
+    }
+  }
+
+  void _showWarning() {
+    if (_warningMark != null) return;
+    final mark = AlarmWarningMark(host: this);
+    _warningMark = mark;
+    add(mark);
+  }
+
+  void _hideWarning() {
+    _warningMark?.removeFromParent();
+    _warningMark = null;
   }
 
   void onUpdateBehavior(double dt);
 
+  /// Called while idle (not activated). Override for patrol, etc.
+  void onIdleBehavior(double dt) {}
+
   void activate() {
+    if (_isActivated) return;
+    _hideWarning();
     _isActivated = true;
     onActivate();
+    _activateNearby(100);
+  }
+
+  /// Wakes other [Enemigo]s within [radius] (chains through [activate]).
+  void _activateNearby(double radius) {
+    if (!isMounted) return;
+    for (final enemy in game.universo.children.whereType<Enemigo>()) {
+      if (identical(enemy, this) || !enemy.isMounted || enemy.isActivated) {
+        continue;
+      }
+      if (enemy.position.distanceTo(position) <= radius) {
+        enemy.activate();
+      }
+    }
   }
 
   void deactivate() {
@@ -135,5 +199,49 @@ abstract class Enemigo extends SpriteComponent
 
   void onDeath() {
     game.incrementShipsDestroyed();
+  }
+}
+
+/// Blinking `!` above an idle enemy while the player is in [Enemigo.warningRadius].
+class AlarmWarningMark extends TextComponent {
+  static const double blinkHz = 2.5;
+
+  final Enemigo host;
+  double _elapsed = 0;
+
+  AlarmWarningMark({required this.host})
+    : super(
+        text: '  !',
+        anchor: Anchor.bottomCenter,
+        priority: 100,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Colors.amberAccent,
+            fontSize: 22,
+            fontFamily: 'Megatrans',
+            fontWeight: FontWeight.w700,
+            shadows: [
+              Shadow(color: Colors.black, blurRadius: 6, offset: Offset(0, 1)),
+            ],
+          ),
+        ),
+      );
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _elapsed += dt;
+    // Keep the mark world-up and above the sprite, ignoring host rotation.
+    final lift = host.size.y * 0.55 + 6;
+    position.setValues(0, -lift);
+    position.rotate(-host.angle);
+    angle = -host.angle;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    // Start visible, then blink off on odd half-cycles.
+    if ((_elapsed * blinkHz).floor().isOdd) return;
+    super.render(canvas);
   }
 }

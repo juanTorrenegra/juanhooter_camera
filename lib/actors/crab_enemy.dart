@@ -4,24 +4,27 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/actors/enemigo.dart';
 
-/// Melee crab: idle until the player enters [alarmRadius] or it takes damage,
-/// then chases and slashes at close range.
+/// Melee crab: patrols [patrolRadius] while idle, then chases and slashes
+/// once the player enters [alarmRadius] or it takes damage.
 class CrabEnemy extends Enemigo {
   final int damage;
-  final double alarmRadius;
   final double meleeRange;
   final double knockbackDistance;
+  final double patrolRadius;
 
   bool _slashOnCooldown = false;
   double _slashCooldownTimer = 0;
   final Vector2 _knockbackRemaining = Vector2.zero();
   final Vector2 velocity = Vector2.zero();
+  final Vector2 _patrolOrigin;
+  final Vector2 _patrolTarget = Vector2.zero();
+  final Random _rng = Random();
 
   /// Seconds to reach [movementSpeed] from a standstill.
   double accelTime = 2.0;
 
   /// Seconds to coast to a stop after cutting thrust.
-  double coastTime = 3.5;
+  double coastTime = 1.2;
 
   CrabEnemy({
     required Sprite sprite,
@@ -30,13 +33,15 @@ class CrabEnemy extends Enemigo {
     double angle = 0,
     int maxHitPoints = 50,
     int shield = 0,
-    double movementSpeed = 30,
+    double movementSpeed = 25,
     double rotationSpeed = 4.0,
-    this.damage = 30,
-    this.alarmRadius = 100,
-    this.meleeRange = 30,
-    this.knockbackDistance = 40,
-  }) : super(
+    this.damage = 20,
+    double alarmRadius = 100,
+    this.meleeRange = 25,
+    this.knockbackDistance = 30,
+    this.patrolRadius = 100,
+  }) : _patrolOrigin = position.clone(),
+       super(
          sprite: sprite,
          position: position,
          size: size ?? Vector2(16, 16),
@@ -45,21 +50,9 @@ class CrabEnemy extends Enemigo {
          shield: shield,
          movementSpeed: movementSpeed,
          rotationSpeed: rotationSpeed,
-       );
-
-  @override
-  void update(double dt) {
-    if (!isActivated) {
-      _tryActivateFromProximity();
-    }
-    super.update(dt);
-  }
-
-  void _tryActivateFromProximity() {
-    if (!game.player.isMounted) return;
-    if (position.distanceTo(game.player.position) <= alarmRadius) {
-      activate();
-    }
+         alarmRadius: alarmRadius,
+       ) {
+    _pickPatrolTarget();
   }
 
   @override
@@ -99,8 +92,9 @@ class CrabEnemy extends Enemigo {
     double dt, {
     required bool thrusting,
     Vector2? thrustDir,
+    double? speed,
   }) {
-    final maxSpeed = movementSpeed.clamp(1.0, 10000.0);
+    final maxSpeed = (speed ?? movementSpeed).clamp(1.0, 10000.0);
     if (thrusting && thrustDir != null && thrustDir.length2 > 0.0001) {
       final accel = maxSpeed / accelTime.clamp(0.05, 20.0);
       _steerVelocityToward(thrustDir.normalized() * maxSpeed, accel, dt);
@@ -114,6 +108,54 @@ class CrabEnemy extends Enemigo {
     if (velocity.length2 > 1e-8) {
       position.add(velocity * dt);
     }
+  }
+
+  void _pickPatrolTarget() {
+    for (var i = 0; i < 8; i++) {
+      final r = sqrt(_rng.nextDouble()) * patrolRadius;
+      final theta = _rng.nextDouble() * 2 * pi;
+      _patrolTarget.setValues(
+        _patrolOrigin.x + cos(theta) * r,
+        _patrolOrigin.y + sin(theta) * r,
+      );
+      if (_patrolTarget.distanceTo(position) > patrolRadius * 0.3) {
+        return;
+      }
+    }
+  }
+
+  void _containInPatrolArea() {
+    final offset = position - _patrolOrigin;
+    final dist = offset.length;
+    // Inertia overshoot only — if they were chasing far away, steer back
+    // via waypoints instead of snapping.
+    if (dist <= patrolRadius || dist > patrolRadius + 8) return;
+    final outward = offset / dist;
+    position.setFrom(_patrolOrigin + outward * patrolRadius);
+    final outwardSpeed = velocity.dot(outward);
+    if (outwardSpeed > 0) {
+      velocity.add(outward * -outwardSpeed);
+    }
+    _pickPatrolTarget();
+  }
+
+  @override
+  void onIdleBehavior(double dt) {
+    final toTarget = _patrolTarget - position;
+    if (toTarget.length < 12) {
+      _pickPatrolTarget();
+    }
+    final toNew = _patrolTarget - position;
+    if (toNew.length2 > 0) {
+      angle = rotateTowards(atan2(toNew.y, toNew.x), dt);
+      _updateSpaceMovement(
+        dt,
+        thrusting: true,
+        thrustDir: toNew,
+        speed: movementSpeed * 0.5,
+      );
+    }
+    _containInPatrolArea();
   }
 
   @override

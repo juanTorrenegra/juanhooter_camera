@@ -34,7 +34,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   double accelTime = 2.0;
 
   /// Seconds to coast to a stop after releasing thrust.
-  double coastTime = 3.5;
+  double coastTime = 1.2;
 
   /// Valores por defecto; [MyGame] asigna `playerMaxHitPoints` al cargar / recrear.
   int maxHitPoints = 100;
