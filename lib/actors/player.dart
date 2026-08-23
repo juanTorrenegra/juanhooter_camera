@@ -20,12 +20,12 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
         priority: 8,
       );
   //double _baseSpeed = 80;;
-  double currentSpeed = 60;
+  double currentSpeed = 50;
   double _angle = 0;
   bool _isChargeSlowed = false;
-  double _speedBeforeCharge = 60;
+  double _speedBeforeCharge = 50;
   final Vector2 _knockbackRemaining = Vector2.zero();
-  double knockbackSpeed = 140;
+  double knockbackSpeed = 120;
 
   /// Current space-drift velocity (world units per second).
   final Vector2 velocity = Vector2.zero();
@@ -109,6 +109,33 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
 
   void clearVelocity() {
     velocity.setZero();
+  }
+
+  /// Keeps the ship inside the visible camera rectangle and kills slide into the walls.
+  void containInWorldRect({
+    required double minX,
+    required double maxX,
+    required double minY,
+    required double maxY,
+  }) {
+    if (position.x < minX) {
+      position.x = minX;
+      if (velocity.x < 0) velocity.x = 0;
+      if (_knockbackRemaining.x < 0) _knockbackRemaining.x = 0;
+    } else if (position.x > maxX) {
+      position.x = maxX;
+      if (velocity.x > 0) velocity.x = 0;
+      if (_knockbackRemaining.x > 0) _knockbackRemaining.x = 0;
+    }
+    if (position.y < minY) {
+      position.y = minY;
+      if (velocity.y < 0) velocity.y = 0;
+      if (_knockbackRemaining.y < 0) _knockbackRemaining.y = 0;
+    } else if (position.y > maxY) {
+      position.y = maxY;
+      if (velocity.y > 0) velocity.y = 0;
+      if (_knockbackRemaining.y > 0) _knockbackRemaining.y = 0;
+    }
   }
 
   void _steerVelocityToward(Vector2 target, double rate, double dt) {

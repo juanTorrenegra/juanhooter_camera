@@ -57,11 +57,14 @@ class MyGame extends FlameGame
   double cameraZoom = 1.9;
   static const double knockbackCameraHoldSeconds = 2.0;
 
-  /// Max distance the player may sit from the viewfinder (never leave screen).
-  static const double cameraOuterRadius = 200;
+  /// Max look-ahead offset; actual cap is also the visible viewport inset.
+  static const double cameraOuterRadius = 170;
 
   /// Rest deadzone: after idle, camera eases here and then stays (not centered).
-  static const double cameraInnerRadius = 100;
+  static const double cameraInnerRadius = 25;
+
+  /// World-unit padding so the ship cannot reach the viewport edge.
+  static const double cameraViewportMargin = 48;
 
   /// Seconds to wait after thrust stops before easing back to [cameraInnerRadius].
   static const double cameraIdleWaitSeconds = 2.0;
@@ -135,6 +138,35 @@ class MyGame extends FlameGame
     vf.position = vf.position + delta;
   }
 
+  Vector2? _visibleWorldHalf() {
+    final cam = camara;
+    if (cam == null) return null;
+    final viewSize = cam.viewport.virtualSize;
+    final zoom = cam.viewfinder.zoom.clamp(0.01, 100.0);
+    if (viewSize.x <= 0 || viewSize.y <= 0) return null;
+    return Vector2(viewSize.x / zoom, viewSize.y / zoom) / 2;
+  }
+
+  double _playerViewportRadius() {
+    final half = _visibleWorldHalf();
+    if (half == null) return cameraOuterRadius;
+    final fit = min(half.x, half.y) - cameraViewportMargin;
+    return min(cameraOuterRadius, max(8.0, fit));
+  }
+
+  void _clampPlayerToViewport() {
+    final cam = camara;
+    final half = _visibleWorldHalf();
+    if (cam == null || half == null || !player.isMounted) return;
+    final center = cam.viewfinder.position;
+    player.containInWorldRect(
+      minX: center.x - half.x + cameraViewportMargin,
+      maxX: center.x + half.x - cameraViewportMargin,
+      minY: center.y - half.y + cameraViewportMargin,
+      maxY: center.y + half.y - cameraViewportMargin,
+    );
+  }
+
   void _clampViewfinderToPlayer(double radius) {
     final vf = camara?.viewfinder;
     if (vf == null || !player.isMounted) return;
@@ -155,7 +187,7 @@ class MyGame extends FlameGame
       if (_knockbackCameraHoldRemaining < 0) {
         _knockbackCameraHoldRemaining = 0;
       }
-      _clampViewfinderToPlayer(cameraOuterRadius);
+      _clampViewfinderToPlayer(_playerViewportRadius());
       return;
     }
 
@@ -179,10 +211,11 @@ class MyGame extends FlameGame
           _cameraLookDir * (along + cameraLookAheadDrift) * dt,
         );
       }
-      _clampViewfinderToPlayer(cameraOuterRadius);
+      final radius = _playerViewportRadius();
+      _clampViewfinderToPlayer(radius);
       if (!aligned) {
         final dist = (player.position - vf.position).length;
-        if (dist >= cameraOuterRadius - 0.5) {
+        if (dist >= radius - 0.5) {
           _cameraLookDir.setFrom(inputDir);
         }
       }
@@ -191,7 +224,7 @@ class MyGame extends FlameGame
 
     _cameraIdleTimer += dt;
     if (_cameraIdleTimer < cameraIdleWaitSeconds) {
-      _clampViewfinderToPlayer(cameraOuterRadius);
+      _clampViewfinderToPlayer(_playerViewportRadius());
       return;
     }
 
@@ -202,7 +235,7 @@ class MyGame extends FlameGame
       final step = min(cameraReturnSpeed * dt, extra);
       _translateViewfinder(offset.normalized() * step);
     }
-    _clampViewfinderToPlayer(cameraOuterRadius);
+    _clampViewfinderToPlayer(_playerViewportRadius());
   }
 
   void _clearKnockbackCameraAndFollow({bool snap = false}) {
@@ -371,7 +404,6 @@ class MyGame extends FlameGame
         position: Vector2(550, 350),
         size: Vector2(16, 16),
         maxHitPoints: 50,
-        movementSpeed: 60,
         rotationSpeed: 4.0,
         damage: 30,
       ),
@@ -397,6 +429,7 @@ class MyGame extends FlameGame
   void update(double dt) {
     super.update(dt * timeScale);
     _updateSpaceCamera(dt);
+    _clampPlayerToViewport();
 
     currentPlayerPos.setFrom(player.position);
 

@@ -30,12 +30,12 @@ class CrabEnemy extends Enemigo {
     double angle = 0,
     int maxHitPoints = 50,
     int shield = 0,
-    double movementSpeed = 60,
+    double movementSpeed = 30,
     double rotationSpeed = 4.0,
     this.damage = 30,
     this.alarmRadius = 100,
     this.meleeRange = 30,
-    this.knockbackDistance = 50,
+    this.knockbackDistance = 40,
   }) : super(
          sprite: sprite,
          position: position,
@@ -95,7 +95,11 @@ class CrabEnemy extends Enemigo {
     velocity.add(delta.normalized() * maxStep);
   }
 
-  void _updateSpaceMovement(double dt, {required bool thrusting, Vector2? thrustDir}) {
+  void _updateSpaceMovement(
+    double dt, {
+    required bool thrusting,
+    Vector2? thrustDir,
+  }) {
     final maxSpeed = movementSpeed.clamp(1.0, 10000.0);
     if (thrusting && thrustDir != null && thrustDir.length2 > 0.0001) {
       final accel = maxSpeed / accelTime.clamp(0.05, 20.0);
@@ -123,8 +127,8 @@ class CrabEnemy extends Enemigo {
       if (_slashCooldownTimer <= 0) {
         _slashOnCooldown = false;
         _slashCooldownTimer = 0;
+        velocity.setZero();
       } else {
-        _updateSpaceMovement(dt, thrusting: false);
         final toPlayer = game.player.position - position;
         if (toPlayer.length2 > 0) {
           angle = rotateTowards(atan2(toPlayer.y, toPlayer.x), dt);
@@ -158,7 +162,8 @@ class CrabEnemy extends Enemigo {
     final player = game.player;
 
     _slashOnCooldown = true;
-    _slashCooldownTimer = SlashHitEffect.lifetime;
+    _slashCooldownTimer = 1.0;
+    velocity.setZero();
 
     final slashAngle = toPlayer.length2 > 0
         ? atan2(toPlayer.y, toPlayer.x)
