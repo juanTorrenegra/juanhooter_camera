@@ -27,6 +27,15 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   final Vector2 _knockbackRemaining = Vector2.zero();
   double knockbackSpeed = 140;
 
+  /// Current space-drift velocity (world units per second).
+  final Vector2 velocity = Vector2.zero();
+
+  /// Seconds to reach [currentSpeed] from a standstill.
+  double accelTime = 2.0;
+
+  /// Seconds to coast to a stop after releasing thrust.
+  double coastTime = 3.5;
+
   /// Valores por defecto; [MyGame] asigna `playerMaxHitPoints` al cargar / recrear.
   int maxHitPoints = 100;
   int currentHitPoints = 100;
@@ -98,6 +107,42 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     _knockbackRemaining.setZero();
   }
 
+  void clearVelocity() {
+    velocity.setZero();
+  }
+
+  void _steerVelocityToward(Vector2 target, double rate, double dt) {
+    final delta = target - velocity;
+    final distance = delta.length;
+    final maxStep = rate * dt;
+    if (distance <= maxStep) {
+      velocity.setFrom(target);
+      return;
+    }
+    velocity.add(delta.normalized() * maxStep);
+  }
+
+  void _updateSpaceMovement(double dt) {
+    final move = game.hud.effectiveMovementDelta;
+    final maxSpeed = currentSpeed.clamp(1.0, 10000.0);
+
+    if (move.length2 > 0.0001) {
+      final accel = maxSpeed / accelTime.clamp(0.05, 20.0);
+      _steerVelocityToward(move * maxSpeed, accel, dt);
+    } else {
+      final decel = maxSpeed / coastTime.clamp(0.05, 30.0);
+      _steerVelocityToward(Vector2.zero(), decel, dt);
+    }
+
+    if (velocity.length > maxSpeed) {
+      velocity.scale(maxSpeed / velocity.length);
+    }
+
+    if (velocity.length2 > 1e-8) {
+      position.add(velocity * dt);
+    }
+  }
+
   void _updateKnockback(double dt) {
     if (_knockbackRemaining.length2 < 1e-8) return;
     final remaining = _knockbackRemaining.length;
@@ -118,6 +163,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     _isDying = true;
     restoreChargeSpeed();
     clearKnockback();
+    clearVelocity();
     if (game.hud.isLoaded) {
       game.hud.cancelCharge();
     }
@@ -224,6 +270,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     currentSpeed = 50;
 
     clearKnockback();
+    clearVelocity();
 
     // Restaurar posición y rotación
     position = Vector2(380, 380);
@@ -256,6 +303,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     // ✅ Solo actualizar movimiento si no está muriendo
     if (!_isDying) {
       _updateKnockback(dt);
+      _updateSpaceMovement(dt);
 
       // Manejar invulnerabilidad y parpadeo
       if (isInvulnerable) {
@@ -271,12 +319,6 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
           isInvulnerable = false;
           isVisible = true;
         }
-      }
-
-      // Movement: joystick; en web también WASD (ver [GameHud.effectiveMovementDelta]).
-      final move = game.hud.effectiveMovementDelta;
-      if (move.length2 > 0) {
-        position.add(move * currentSpeed * dt);
       }
 
       // Rotación: look joystick; en web también sigue al mouse

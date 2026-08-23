@@ -15,6 +15,13 @@ class CrabEnemy extends Enemigo {
   bool _slashOnCooldown = false;
   double _slashCooldownTimer = 0;
   final Vector2 _knockbackRemaining = Vector2.zero();
+  final Vector2 velocity = Vector2.zero();
+
+  /// Seconds to reach [movementSpeed] from a standstill.
+  double accelTime = 2.0;
+
+  /// Seconds to coast to a stop after cutting thrust.
+  double coastTime = 3.5;
 
   CrabEnemy({
     required Sprite sprite,
@@ -60,6 +67,7 @@ class CrabEnemy extends Enemigo {
     _slashOnCooldown = false;
     _slashCooldownTimer = 0;
     _knockbackRemaining.setZero();
+    velocity.setZero();
   }
 
   void _updateKnockback(double dt) {
@@ -76,6 +84,34 @@ class CrabEnemy extends Enemigo {
     _knockbackRemaining.scale((remaining - step) / remaining);
   }
 
+  void _steerVelocityToward(Vector2 target, double rate, double dt) {
+    final delta = target - velocity;
+    final distance = delta.length;
+    final maxStep = rate * dt;
+    if (distance <= maxStep) {
+      velocity.setFrom(target);
+      return;
+    }
+    velocity.add(delta.normalized() * maxStep);
+  }
+
+  void _updateSpaceMovement(double dt, {required bool thrusting, Vector2? thrustDir}) {
+    final maxSpeed = movementSpeed.clamp(1.0, 10000.0);
+    if (thrusting && thrustDir != null && thrustDir.length2 > 0.0001) {
+      final accel = maxSpeed / accelTime.clamp(0.05, 20.0);
+      _steerVelocityToward(thrustDir.normalized() * maxSpeed, accel, dt);
+    } else {
+      final decel = maxSpeed / coastTime.clamp(0.05, 30.0);
+      _steerVelocityToward(Vector2.zero(), decel, dt);
+    }
+    if (velocity.length > maxSpeed) {
+      velocity.scale(maxSpeed / velocity.length);
+    }
+    if (velocity.length2 > 1e-8) {
+      position.add(velocity * dt);
+    }
+  }
+
   @override
   void onUpdateBehavior(double dt) {
     if (!game.player.isMounted) return;
@@ -88,7 +124,7 @@ class CrabEnemy extends Enemigo {
         _slashOnCooldown = false;
         _slashCooldownTimer = 0;
       } else {
-        // Hold still for the slash; keep facing the player.
+        _updateSpaceMovement(dt, thrusting: false);
         final toPlayer = game.player.position - position;
         if (toPlayer.length2 > 0) {
           angle = rotateTowards(atan2(toPlayer.y, toPlayer.x), dt);
@@ -102,12 +138,13 @@ class CrabEnemy extends Enemigo {
 
     if (toPlayer.length2 > 0) {
       angle = rotateTowards(atan2(toPlayer.y, toPlayer.x), dt);
-      if (distance > meleeRange) {
-        final gap = distance - meleeRange;
-        final step = min(movementSpeed * dt, gap);
-        position.add(toPlayer.normalized() * step);
-      }
     }
+
+    _updateSpaceMovement(
+      dt,
+      thrusting: distance > meleeRange,
+      thrustDir: toPlayer,
+    );
 
     // Re-measure after closing the gap so arriving this frame still attacks.
     // Epsilon covers float error from stopping exactly on the range circle.

@@ -56,11 +56,28 @@ class MyGame extends FlameGame
   double timeScale = 1.0; //game speed!
   double cameraZoom = 1.9;
   static const double knockbackCameraHoldSeconds = 2.0;
-  static const double knockbackCameraReacquireSpeed = 160;
+
+  /// Max distance the player may sit from the viewfinder (never leave screen).
+  static const double cameraOuterRadius = 200;
+
+  /// Rest deadzone: after idle, camera eases here and then stays (not centered).
+  static const double cameraInnerRadius = 100;
+
+  /// Seconds to wait after thrust stops before easing back to [cameraInnerRadius].
+  static const double cameraIdleWaitSeconds = 2.0;
+
+  /// Extra viewfinder speed along travel so the camera slowly leads the ship.
+  static const double cameraLookAheadDrift = 8;
+
+  /// Viewfinder speed when returning toward the inner deadzone.
+  static const double cameraReturnSpeed = 35;
 
   /// World units per second for knockback slides (player and enemies).
   double knockbackSpeed = 140;
   double _knockbackCameraHoldRemaining = 0;
+  double _cameraIdleTimer = 0;
+  final Vector2 _cameraLookDir = Vector2.zero();
+  bool _hasCameraLookDir = false;
 
   late ParallaxComponent spaceParallax;
   double spikeCurveStrength = 0.35;
@@ -84,13 +101,10 @@ class MyGame extends FlameGame
     }
   }
 
-  /// Knockback hits: leave the viewfinder where it is so the camera does not
-  /// jump with the player. After [knockbackCameraHoldSeconds] it eases back.
+  /// Knockback hits: freeze look-ahead so the viewfinder does not jump.
   /// Enemies without knockback should not call this.
   void detachViewfinderForKnockback() {
-    final cam = camara;
-    if (cam == null) return;
-    cam.stop();
+    camara?.stop();
     _knockbackCameraHoldRemaining = knockbackCameraHoldSeconds;
   }
 
@@ -100,22 +114,99 @@ class MyGame extends FlameGame
     detachViewfinderForKnockback();
   }
 
-  void _updateKnockbackCamera(double dt) {
-    if (_knockbackCameraHoldRemaining <= 0) return;
-    _knockbackCameraHoldRemaining -= dt;
-    if (_knockbackCameraHoldRemaining > 0) return;
+  void snapViewfinderToPlayer() {
     _knockbackCameraHoldRemaining = 0;
-    _followPlayer(snap: false, maxSpeed: knockbackCameraReacquireSpeed);
+    _cameraIdleTimer = 0;
+    _hasCameraLookDir = false;
+    camara?.stop();
+    if (camara != null && player.isMounted) {
+      _setViewfinderPosition(player.position);
+    }
   }
 
-  void _followPlayer({bool snap = false, double maxSpeed = double.infinity}) {
-    if (camara == null || !player.isMounted) return;
-    camara!.follow(player, maxSpeed: maxSpeed, snap: snap);
+  /// Viewfinder.position is a copy; mutating it in place does not move the camera.
+  void _setViewfinderPosition(Vector2 worldPoint) {
+    camara?.viewfinder.position = worldPoint.clone();
+  }
+
+  void _translateViewfinder(Vector2 delta) {
+    final vf = camara?.viewfinder;
+    if (vf == null) return;
+    vf.position = vf.position + delta;
+  }
+
+  void _clampViewfinderToPlayer(double radius) {
+    final vf = camara?.viewfinder;
+    if (vf == null || !player.isMounted) return;
+    final offset = player.position - vf.position;
+    final dist = offset.length;
+    if (dist <= radius) return;
+    _setViewfinderPosition(player.position - offset.normalized() * radius);
+  }
+
+  /// Spoon-in-a-glass camera: look ahead while thrusting, deadzone when idle.
+  void _updateSpaceCamera(double dt) {
+    final cam = camara;
+    if (cam == null || !player.isMounted) return;
+    final vf = cam.viewfinder;
+
+    if (_knockbackCameraHoldRemaining > 0) {
+      _knockbackCameraHoldRemaining -= dt;
+      if (_knockbackCameraHoldRemaining < 0) {
+        _knockbackCameraHoldRemaining = 0;
+      }
+      _clampViewfinderToPlayer(cameraOuterRadius);
+      return;
+    }
+
+    final thrusting =
+        hud.isLoaded && hud.effectiveMovementDelta.length2 > 0.0001;
+    if (thrusting) {
+      _cameraIdleTimer = 0;
+      final inputDir = hud.effectiveMovementDelta.normalized();
+      if (!_hasCameraLookDir) {
+        _cameraLookDir.setFrom(inputDir);
+        _hasCameraLookDir = true;
+      }
+
+      final aligned = inputDir.dot(_cameraLookDir) >= 0;
+      if (aligned) {
+        _cameraLookDir
+          ..add(inputDir * 2.4 * dt)
+          ..normalize();
+        final along = max(0.0, player.velocity.dot(_cameraLookDir));
+        _translateViewfinder(
+          _cameraLookDir * (along + cameraLookAheadDrift) * dt,
+        );
+      }
+      _clampViewfinderToPlayer(cameraOuterRadius);
+      if (!aligned) {
+        final dist = (player.position - vf.position).length;
+        if (dist >= cameraOuterRadius - 0.5) {
+          _cameraLookDir.setFrom(inputDir);
+        }
+      }
+      return;
+    }
+
+    _cameraIdleTimer += dt;
+    if (_cameraIdleTimer < cameraIdleWaitSeconds) {
+      _clampViewfinderToPlayer(cameraOuterRadius);
+      return;
+    }
+
+    final offset = player.position - vf.position;
+    final dist = offset.length;
+    if (dist > cameraInnerRadius) {
+      final extra = dist - cameraInnerRadius;
+      final step = min(cameraReturnSpeed * dt, extra);
+      _translateViewfinder(offset.normalized() * step);
+    }
+    _clampViewfinderToPlayer(cameraOuterRadius);
   }
 
   void _clearKnockbackCameraAndFollow({bool snap = false}) {
-    _knockbackCameraHoldRemaining = 0;
-    _followPlayer(snap: snap);
+    snapViewfinderToPlayer();
   }
 
   void setSpikeCurveStrength(double value) {
@@ -292,7 +383,8 @@ class MyGame extends FlameGame
 
     currentPlayerPos = player.position.clone();
 
-    camara?.follow(player);
+    camara?.stop();
+    _setViewfinderPosition(player.position);
   }
 
   @override
@@ -304,21 +396,14 @@ class MyGame extends FlameGame
   @override
   void update(double dt) {
     super.update(dt * timeScale);
-    _updateKnockbackCamera(dt);
+    _updateSpaceCamera(dt);
 
     currentPlayerPos.setFrom(player.position);
 
-    final input = hud.effectiveMovementDelta;
-
-    if (input.length2 < 1e-10) {
-      // Si no hay input (joystick / WASD en web), desaceleramos suavemente
-      spaceParallax.parallax!.baseVelocity.scale(0.9);
-      return;
-    }
-
-    // Capas en sentido contrario al movimiento del jugador (scroll del cielo).
-    // Antes: `-input * 25` se veía como si las estrellas siguieran a la nave; usar `input * 25` invierte el scroll.
-    spaceParallax.parallax!.baseVelocity = input * 25;
+    final speed = player.currentSpeed.clamp(1.0, 10000.0);
+    spaceParallax.parallax!.baseVelocity.setFrom(
+      player.velocity * (25 / speed),
+    );
   }
 
   @override

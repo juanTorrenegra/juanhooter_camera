@@ -131,9 +131,6 @@ class GameOverComponent extends PositionComponent
 
     await game.recreatePlayer();
 
-    if (game.camara != null) {
-      game.camara!.follow(game.player);
-    }
     game.shipsDestroyed = 0;
     game.scoreNotifier.value = 0;
   }
