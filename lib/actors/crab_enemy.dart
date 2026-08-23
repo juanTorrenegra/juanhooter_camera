@@ -14,6 +14,7 @@ class CrabEnemy extends Enemigo {
 
   bool _slashOnCooldown = false;
   double _slashCooldownTimer = 0;
+  final Vector2 _knockbackRemaining = Vector2.zero();
 
   CrabEnemy({
     required Sprite sprite,
@@ -27,7 +28,7 @@ class CrabEnemy extends Enemigo {
     this.damage = 30,
     this.alarmRadius = 100,
     this.meleeRange = 30,
-    this.knockbackDistance = 20,
+    this.knockbackDistance = 50,
   }) : super(
          sprite: sprite,
          position: position,
@@ -58,11 +59,28 @@ class CrabEnemy extends Enemigo {
   void onDeactivate() {
     _slashOnCooldown = false;
     _slashCooldownTimer = 0;
+    _knockbackRemaining.setZero();
+  }
+
+  void _updateKnockback(double dt) {
+    if (_knockbackRemaining.length2 < 1e-8) return;
+    final remaining = _knockbackRemaining.length;
+    final step = game.knockbackSpeed * dt;
+    if (step >= remaining) {
+      position.add(_knockbackRemaining);
+      _knockbackRemaining.setZero();
+      return;
+    }
+    final dir = _knockbackRemaining.normalized();
+    position.add(dir * step);
+    _knockbackRemaining.scale((remaining - step) / remaining);
   }
 
   @override
   void onUpdateBehavior(double dt) {
     if (!game.player.isMounted) return;
+
+    _updateKnockback(dt);
 
     if (_slashOnCooldown) {
       _slashCooldownTimer -= dt;
@@ -110,20 +128,15 @@ class CrabEnemy extends Enemigo {
         : angle;
     final midpoint = (position + player.position) / 2;
     game.universo.add(
-      SlashHitEffect(
-        worldPosition: midpoint,
-        angle: slashAngle + pi / 4,
-      ),
+      SlashHitEffect(worldPosition: midpoint, angle: slashAngle + pi / 4),
     );
 
     player.takeDamage(damage);
 
     final away = player.position - position;
-    if (away.length2 > 0) {
-      player.position.add(away.normalized() * knockbackDistance);
-    } else {
-      player.position.add(Vector2(knockbackDistance, 0));
-    }
+    final dir = away.length2 > 0 ? away.normalized() : Vector2(1, 0);
+    game.applyPlayerKnockback(dir * knockbackDistance);
+    _knockbackRemaining.setFrom(-dir * knockbackDistance);
   }
 }
 
@@ -159,17 +172,63 @@ class SlashHitEffect extends PositionComponent {
 
     final paint = Paint()
       ..color = Colors.white.withValues(alpha: opacity)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round;
+      ..style = PaintingStyle.fill;
 
     canvas.translate(size.x / 2, size.y / 2);
     for (var i = 0; i < 3; i++) {
       final offset = -12.0 + i * 12.0;
-      final path = Path()
-        ..moveTo(offset - 10, -18)
-        ..quadraticBezierTo(offset + 6, -2, offset + 16, 18);
-      canvas.drawPath(path, paint);
+      _drawPointySlash(
+        canvas,
+        paint,
+        Vector2(offset - 10, -18),
+        Vector2(offset + 6, -2),
+        Vector2(offset + 16, 18),
+      );
     }
+  }
+
+  /// Filled ribbon along a quadratic curve, width 0 at the tips.
+  void _drawPointySlash(
+    Canvas canvas,
+    Paint paint,
+    Vector2 p0,
+    Vector2 p1,
+    Vector2 p2,
+  ) {
+    const samples = 14;
+    const maxHalfWidth = 1.35;
+    final left = <Offset>[];
+    final right = <Offset>[];
+
+    for (var i = 0; i <= samples; i++) {
+      final t = i / samples;
+      final point = _quadPoint(p0, p1, p2, t);
+      final tangent = _quadTangent(p0, p1, p2, t);
+      if (tangent.length2 < 1e-8) continue;
+      tangent.normalize();
+      final normal = Vector2(-tangent.y, tangent.x);
+      final halfWidth = maxHalfWidth * sin(pi * t);
+      left.add(
+        Offset(point.x + normal.x * halfWidth, point.y + normal.y * halfWidth),
+      );
+      right.add(
+        Offset(point.x - normal.x * halfWidth, point.y - normal.y * halfWidth),
+      );
+    }
+
+    if (left.length < 2) return;
+    canvas.drawPath(
+      Path()..addPolygon([...left, ...right.reversed], true),
+      paint,
+    );
+  }
+
+  Vector2 _quadPoint(Vector2 p0, Vector2 p1, Vector2 p2, double t) {
+    final u = 1 - t;
+    return p0 * (u * u) + p1 * (2 * u * t) + p2 * (t * t);
+  }
+
+  Vector2 _quadTangent(Vector2 p0, Vector2 p1, Vector2 p2, double t) {
+    return (p1 - p0) * (2 * (1 - t)) + (p2 - p1) * (2 * t);
   }
 }

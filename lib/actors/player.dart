@@ -24,6 +24,8 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   double _angle = 0;
   bool _isChargeSlowed = false;
   double _speedBeforeCharge = 60;
+  final Vector2 _knockbackRemaining = Vector2.zero();
+  double knockbackSpeed = 140;
 
   /// Valores por defecto; [MyGame] asigna `playerMaxHitPoints` al cargar / recrear.
   int maxHitPoints = 100;
@@ -84,11 +86,38 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     _isChargeSlowed = false;
   }
 
+  void startKnockback(Vector2 delta, {double? speed}) {
+    if (_isDying || delta.length2 <= 0) return;
+    _knockbackRemaining.setFrom(delta);
+    if (speed != null) {
+      knockbackSpeed = speed;
+    }
+  }
+
+  void clearKnockback() {
+    _knockbackRemaining.setZero();
+  }
+
+  void _updateKnockback(double dt) {
+    if (_knockbackRemaining.length2 < 1e-8) return;
+    final remaining = _knockbackRemaining.length;
+    final step = knockbackSpeed * dt;
+    if (step >= remaining) {
+      position.add(_knockbackRemaining);
+      _knockbackRemaining.setZero();
+      return;
+    }
+    final dir = _knockbackRemaining.normalized();
+    position.add(dir * step);
+    _knockbackRemaining.scale((remaining - step) / remaining);
+  }
+
   void die() {
     if (_isDying) return; // ✅ Evitar múltiples llamadas
 
     _isDying = true;
     restoreChargeSpeed();
+    clearKnockback();
     if (game.hud.isLoaded) {
       game.hud.cancelCharge();
     }
@@ -194,6 +223,8 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     restoreChargeSpeed();
     currentSpeed = 50;
 
+    clearKnockback();
+
     // Restaurar posición y rotación
     position = Vector2(380, 380);
     angle = 0;
@@ -224,6 +255,8 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
 
     // ✅ Solo actualizar movimiento si no está muriendo
     if (!_isDying) {
+      _updateKnockback(dt);
+
       // Manejar invulnerabilidad y parpadeo
       if (isInvulnerable) {
         invulnerabilityTimer -= dt;

@@ -55,6 +55,12 @@ class MyGame extends FlameGame
   late AudioPool pool;
   double timeScale = 1.0; //game speed!
   double cameraZoom = 1.9;
+  static const double knockbackCameraHoldSeconds = 2.0;
+  static const double knockbackCameraReacquireSpeed = 160;
+
+  /// World units per second for knockback slides (player and enemies).
+  double knockbackSpeed = 140;
+  double _knockbackCameraHoldRemaining = 0;
 
   late ParallaxComponent spaceParallax;
   double spikeCurveStrength = 0.35;
@@ -76,6 +82,40 @@ class MyGame extends FlameGame
       camara!.viewfinder.zoom = cameraZoom;
       print('Zoom set to: ${cameraZoom}x');
     }
+  }
+
+  /// Knockback hits: leave the viewfinder where it is so the camera does not
+  /// jump with the player. After [knockbackCameraHoldSeconds] it eases back.
+  /// Enemies without knockback should not call this.
+  void detachViewfinderForKnockback() {
+    final cam = camara;
+    if (cam == null) return;
+    cam.stop();
+    _knockbackCameraHoldRemaining = knockbackCameraHoldSeconds;
+  }
+
+  void applyPlayerKnockback(Vector2 delta, {double? speed}) {
+    if (!player.isMounted || delta.length2 <= 0) return;
+    player.startKnockback(delta, speed: speed ?? knockbackSpeed);
+    detachViewfinderForKnockback();
+  }
+
+  void _updateKnockbackCamera(double dt) {
+    if (_knockbackCameraHoldRemaining <= 0) return;
+    _knockbackCameraHoldRemaining -= dt;
+    if (_knockbackCameraHoldRemaining > 0) return;
+    _knockbackCameraHoldRemaining = 0;
+    _followPlayer(snap: false, maxSpeed: knockbackCameraReacquireSpeed);
+  }
+
+  void _followPlayer({bool snap = false, double maxSpeed = double.infinity}) {
+    if (camara == null || !player.isMounted) return;
+    camara!.follow(player, maxSpeed: maxSpeed, snap: snap);
+  }
+
+  void _clearKnockbackCameraAndFollow({bool snap = false}) {
+    _knockbackCameraHoldRemaining = 0;
+    _followPlayer(snap: snap);
   }
 
   void setSpikeCurveStrength(double value) {
@@ -264,6 +304,7 @@ class MyGame extends FlameGame
   @override
   void update(double dt) {
     super.update(dt * timeScale);
+    _updateKnockbackCamera(dt);
 
     currentPlayerPos.setFrom(player.position);
 
@@ -464,7 +505,7 @@ class MyGame extends FlameGame
     if (camara != null) {
       cameraZoom = 0.5;
       camara!.viewfinder.zoom = cameraZoom;
-      camara!.follow(player);
+      _clearKnockbackCameraAndFollow(snap: true);
       //camara!.snapTo(player.position);
 
       print('✅ Cámara reseteada: zoom=0.5x, siguiendo jugador');
@@ -521,7 +562,7 @@ class MyGame extends FlameGame
 
     // 5. Actualizar referencias
     if (camara != null) {
-      camara!.follow(player);
+      _clearKnockbackCameraAndFollow(snap: true);
     }
 
     if (hud != null) {
