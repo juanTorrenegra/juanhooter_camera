@@ -22,7 +22,7 @@ abstract class Enemigo extends SpriteComponent
     required Vector2 position,
     Vector2? size,
     double angle = 0, // ✅ Ángulo inicial personalizable
-    int maxHitPoints = 3,
+    int maxHitPoints = 50,
     this.shield = 0,
     this.movementSpeed = 0,
     this.rotationSpeed = 1.0, // ✅ Velocidad de rotación base

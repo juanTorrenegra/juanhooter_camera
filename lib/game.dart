@@ -12,6 +12,7 @@ import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/actors/ranged_enemy.dart';
 import 'package:juanshooter/actors/spike_enemy.dart';
+import 'package:juanshooter/actors/crab_enemy.dart';
 import 'package:juanshooter/hud/game_hud.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:juanshooter/overlays/game_over.dart';
@@ -232,6 +233,18 @@ class MyGame extends FlameGame
       damage: 10,
     );
     universo.add(enemigo2);
+
+    universo.add(
+      CrabEnemy(
+        sprite: await Sprite.load('verdePequeno.png'),
+        position: Vector2(550, 350),
+        size: Vector2(16, 16),
+        maxHitPoints: 50,
+        movementSpeed: 60,
+        rotationSpeed: 4.0,
+        damage: 30,
+      ),
+    );
 
     hud = GameHud()..priority = 100;
     scoreNotifier.value = shipsDestroyed;
