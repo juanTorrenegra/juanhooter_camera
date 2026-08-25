@@ -366,7 +366,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     }
   }
 
-  void shoot({int damage = 4, double sizeScale = 1}) {
+  void shoot({int damage = 4, double sizeScale = 1, String sfx = 'fire_2.mp3'}) {
     if (_isDying) return;
     final shootPosition = calculateShootPosition(
       position,
@@ -383,6 +383,6 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       sizeScale: sizeScale,
     );
     game.universo.add(bullet);
-    game.pool.start();
+    game.playShotSound(sfx);
   }
 }

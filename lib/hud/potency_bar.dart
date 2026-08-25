@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flame/components.dart';
 import 'package:flame/text.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/game.dart';
 
@@ -33,24 +36,45 @@ class ChargeShot {
     if (index >= 3) return 2;
     return 1;
   }
+
+  /// Shot SFX: tap–1s `fire_2`, 1–3s `simpleShot`, full charge `shotBigEnd`.
+  static String shotSoundForHoldTime(double holdSeconds) {
+    if (holdSeconds >= maxChargeSeconds) return 'shotBigEnd.mp3';
+    if (holdSeconds >= 1.0) return 'simpleShot.mp3';
+    return 'fire_2.mp3';
+  }
 }
 
 class ChargeShotResult {
   final int damage;
   final double sizeScale;
+  final String shotSound;
 
-  const ChargeShotResult({required this.damage, required this.sizeScale});
+  const ChargeShotResult({
+    required this.damage,
+    required this.sizeScale,
+    required this.shotSound,
+  });
 }
 
 /// Top-center thermometer: cyan fill while charging, fast drain on release.
 class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
   static const double _borderRadius = 10;
   static const double _strokeWidth = 2.5;
+  static const String _chargeSoundFile = 'carga3s.mp3';
+  static const String _sustainSoundFile = 'carga5ms.mp3';
+  static const double _chargeSoundStartSeconds = 0.5;
 
   double _fill = 0;
   double _holdSeconds = 0;
   bool _charging = false;
   bool _draining = false;
+
+  AudioPlayer? _chargePlayer;
+  AudioPlayer? _sustainPlayer;
+  int _chargeSoundGen = 0;
+  bool _sustainLooping = false;
+  bool _chargeSoundStarted = false;
 
   bool get isCharging => _charging;
 
@@ -61,11 +85,32 @@ class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
         priority: 80,
       );
 
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    unawaited(
+      FlameAudio.audioCache.loadAll([
+        _chargeSoundFile,
+        _sustainSoundFile,
+        'simpleShot.mp3',
+        'shotBigEnd.mp3',
+      ]),
+    );
+  }
+
+  @override
+  void onRemove() {
+    _stopChargeSound();
+    super.onRemove();
+  }
+
   void beginCharge() {
     _charging = true;
     _draining = false;
     _holdSeconds = 0;
     _fill = 0;
+    _sustainLooping = false;
+    _chargeSoundStarted = false;
   }
 
   ChargeShotResult? releaseCharge() {
@@ -73,9 +118,11 @@ class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
     final result = ChargeShotResult(
       damage: ChargeShot.damageForHoldTime(_holdSeconds),
       sizeScale: ChargeShot.sizeScaleForHoldTime(_holdSeconds),
+      shotSound: ChargeShot.shotSoundForHoldTime(_holdSeconds),
     );
     _charging = false;
     _draining = true;
+    _stopChargeSound();
     return result;
   }
 
@@ -83,6 +130,7 @@ class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
     _charging = false;
     _draining = _fill > 0;
     _holdSeconds = 0;
+    _stopChargeSound();
   }
 
   void reset() {
@@ -90,6 +138,65 @@ class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
     _draining = false;
     _holdSeconds = 0;
     _fill = 0;
+    _stopChargeSound();
+  }
+
+  Future<void> _startChargeSound() async {
+    final gen = ++_chargeSoundGen;
+    await _chargePlayer?.stop();
+    await _sustainPlayer?.stop();
+    if (gen != _chargeSoundGen) return;
+    try {
+      final player = await FlameAudio.play(_chargeSoundFile);
+      if (gen != _chargeSoundGen) {
+        await player.stop();
+        return;
+      }
+      await player.seek(
+        Duration(milliseconds: (_chargeSoundStartSeconds * 1000).round()),
+      );
+      if (gen != _chargeSoundGen) {
+        await player.stop();
+        return;
+      }
+      _chargePlayer = player;
+    } catch (_) {
+      // Audio is optional; charging still works if playback fails.
+    }
+  }
+
+  Future<void> _startSustainLoop() async {
+    if (_sustainLooping) return;
+    _sustainLooping = true;
+    final gen = _chargeSoundGen;
+    try {
+      await _chargePlayer?.stop();
+      if (gen != _chargeSoundGen) return;
+      final player = await FlameAudio.loop(_sustainSoundFile);
+      if (gen != _chargeSoundGen) {
+        await player.stop();
+        return;
+      }
+      _sustainPlayer = player;
+    } catch (_) {
+      _sustainLooping = false;
+    }
+  }
+
+  void _stopChargeSound() {
+    _chargeSoundGen++;
+    _sustainLooping = false;
+    _chargeSoundStarted = false;
+    final charge = _chargePlayer;
+    final sustain = _sustainPlayer;
+    _chargePlayer = null;
+    _sustainPlayer = null;
+    if (charge != null) {
+      unawaited(charge.stop());
+    }
+    if (sustain != null) {
+      unawaited(sustain.stop());
+    }
   }
 
   @override
@@ -100,6 +207,13 @@ class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
     if (_charging) {
       _holdSeconds += realDt;
       _fill = (_holdSeconds / ChargeShot.maxChargeSeconds).clamp(0.0, 1.0);
+      if (_holdSeconds >= _chargeSoundStartSeconds && !_chargeSoundStarted) {
+        _chargeSoundStarted = true;
+        unawaited(_startChargeSound());
+      }
+      if (_holdSeconds >= ChargeShot.maxChargeSeconds && !_sustainLooping) {
+        unawaited(_startSustainLoop());
+      }
       return;
     }
 

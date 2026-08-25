@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flame/components.dart';
-
+import 'package:flame/events.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Matrix4;
@@ -163,7 +163,8 @@ class HealthBar extends PositionComponent with HasGameReference<MyGame> {
   }
 }
 
-class GameHud extends PositionComponent with HasGameReference<MyGame> {
+class GameHud extends PositionComponent
+    with HasGameReference<MyGame>, TapCallbacks {
   /// Touch controls: only created on mobile/desktop apps, never on web.
   JoystickComponent? movementJoystick;
   JoystickComponent? lookJoystick;
@@ -255,7 +256,11 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     final shot = potencyBar.releaseCharge();
     game.player.restoreChargeSpeed();
     if (shot != null && !game.paused && game.player.isMounted) {
-      game.player.shoot(damage: shot.damage, sizeScale: shot.sizeScale);
+      game.player.shoot(
+        damage: shot.damage,
+        sizeScale: shot.sizeScale,
+        sfx: shot.shotSound,
+      );
     }
   }
 
@@ -265,6 +270,18 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       game.player.restoreChargeSpeed();
     }
     potencyBar.cancelCharge();
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    if (!kIsWeb) return;
+    beginCharge();
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    if (!kIsWeb) return;
+    releaseCharge();
   }
 
   @override
@@ -399,6 +416,9 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         game.camara?.viewport.virtualSize ??
         Vector2(MyGame.logicalWidth, MyGame.logicalHeight);
     if (viewSize.x <= 0 || viewSize.y <= 0) return;
+
+    size = viewSize;
+    position = Vector2.zero();
 
     final joystickY = viewSize.y * 3 / 4;
     movementJoystick?.position = Vector2(viewSize.x * 1 / 8, joystickY);

@@ -401,7 +401,7 @@ class MyGame extends FlameGame
     universo.add(
       CrabEnemy(
         sprite: await Sprite.load('enemigo.png'),
-        position: Vector2(550, 350),
+        position: Vector2(620, 350),
         size: Vector2(16, 16),
         maxHitPoints: 50,
         rotationSpeed: 4.0,
@@ -473,15 +473,22 @@ class MyGame extends FlameGame
     hud.setWebMouseWorldTarget(worldTarget);
   }
 
+  void _beginWebCharge() {
+    if (!kIsWeb || paused || !player.isMounted || !hud.isLoaded) return;
+    hud.beginCharge();
+  }
+
+  void _endWebCharge() {
+    if (!kIsWeb || !hud.isLoaded) return;
+    hud.releaseCharge();
+  }
+
   @override
   void onPanDown(flame_events.DragDownInfo info) {
     super.onPanDown(info);
-    if (!kIsWeb || paused || !player.isMounted || !hud.isLoaded) return;
-    hud.beginCharge();
-    final worldTarget = camara?.globalToLocal(info.eventPosition.widget);
-    if (worldTarget != null) {
-      hud.setWebMouseWorldTarget(worldTarget);
-    }
+    _beginWebCharge();
+    if (!kIsWeb || camara == null || !hud.isLoaded) return;
+    hud.setWebMouseWorldTarget(camara!.globalToLocal(info.eventPosition.widget));
   }
 
   @override
@@ -496,15 +503,7 @@ class MyGame extends FlameGame
   @override
   void onPanEnd(flame_events.DragEndInfo info) {
     super.onPanEnd(info);
-    if (!kIsWeb || !hud.isLoaded) return;
-    hud.releaseCharge();
-  }
-
-  @override
-  void onPanCancel() {
-    super.onPanCancel();
-    if (!kIsWeb || !hud.isLoaded) return;
-    hud.releaseCharge();
+    _endWebCharge();
   }
 
   @override
@@ -518,6 +517,14 @@ class MyGame extends FlameGame
   void startBgmMusic() {
     FlameAudio.bgm.initialize();
     FlameAudio.bgm.play('bg_music.ogg');
+  }
+
+  void playShotSound(String file) {
+    if (file == 'fire_2.mp3') {
+      pool.start();
+      return;
+    }
+    unawaited(FlameAudio.play(file));
   }
 
   void pauseBgmMusic() {
