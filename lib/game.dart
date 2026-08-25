@@ -355,7 +355,7 @@ class MyGame extends FlameGame
     final layerNear = await ParallaxLayer.load(
       ParallaxImageData('estrellas950x450.png'),
       repeat: ImageRepeat.repeat,
-      velocityMultiplier: Vector2(2.2, 2.2),
+      velocityMultiplier: Vector2(1.2, 1.2),
     );
 
     final parallax = Parallax([
@@ -488,7 +488,9 @@ class MyGame extends FlameGame
     super.onPanDown(info);
     _beginWebCharge();
     if (!kIsWeb || camara == null || !hud.isLoaded) return;
-    hud.setWebMouseWorldTarget(camara!.globalToLocal(info.eventPosition.widget));
+    hud.setWebMouseWorldTarget(
+      camara!.globalToLocal(info.eventPosition.widget),
+    );
   }
 
   @override

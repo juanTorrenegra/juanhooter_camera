@@ -61,8 +61,8 @@ class ChargeShotResult {
 class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
   static const double _borderRadius = 10;
   static const double _strokeWidth = 2.5;
-  static const String _chargeSoundFile = 'carga3s.mp3';
-  static const String _sustainSoundFile = 'carga5ms.mp3';
+  static const String _chargeSoundFile = 'energy3s.mp3';
+  static const String _sustainSoundFile = 'energy5ms.mp3';
   static const double _chargeSoundStartSeconds = 0.5;
 
   double _fill = 0;
@@ -148,13 +148,6 @@ class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
     if (gen != _chargeSoundGen) return;
     try {
       final player = await FlameAudio.play(_chargeSoundFile);
-      if (gen != _chargeSoundGen) {
-        await player.stop();
-        return;
-      }
-      await player.seek(
-        Duration(milliseconds: (_chargeSoundStartSeconds * 1000).round()),
-      );
       if (gen != _chargeSoundGen) {
         await player.stop();
         return;
