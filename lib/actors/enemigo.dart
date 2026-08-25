@@ -192,13 +192,14 @@ abstract class Enemigo extends SpriteComponent
     hitPoints += remainingShield;
 
     if (hitPoints <= 0) {
-      removeFromParent();
       onDeath();
+      removeFromParent();
     }
   } //.
 
   void onDeath() {
     game.incrementShipsDestroyed();
+    game.spawnEnemyExplosion(position);
   }
 }
 

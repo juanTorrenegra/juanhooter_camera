@@ -94,3 +94,70 @@ class ExplosionEffect extends Component with HasGameReference<MyGame> {
     }
   }
 }
+
+/// Compact white debris burst for enemy deaths in space.
+class SpaceExplosionEffect extends PositionComponent {
+  static const int _count = 18;
+
+  SpaceExplosionEffect({required Vector2 center})
+    : super(
+        position: center.clone(),
+        anchor: Anchor.center,
+        priority: 1400,
+      );
+
+  @override
+  Future<void> onLoad() async {
+    final rng = Random();
+    for (var i = 0; i < _count; i++) {
+      final angle = rng.nextDouble() * 2 * pi;
+      final speed = 35 + rng.nextDouble() * 90;
+      add(
+        _SpaceSpark(
+          velocity: Vector2(cos(angle), sin(angle)) * speed,
+          lifespan: 0.28 + rng.nextDouble() * 0.32,
+          startRadius: 0.7 + rng.nextDouble() * 1.4,
+        ),
+      );
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (children.isEmpty) {
+      removeFromParent();
+    }
+  }
+}
+
+class _SpaceSpark extends CircleComponent {
+  final Vector2 velocity;
+  final double lifespan;
+  final double startRadius;
+  double _age = 0;
+
+  _SpaceSpark({
+    required this.velocity,
+    required this.lifespan,
+    required this.startRadius,
+  }) : super(
+         radius: startRadius,
+         anchor: Anchor.center,
+         paint: Paint()..color = Colors.white,
+       );
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    position.add(velocity * dt);
+    velocity.scale(pow(0.08, dt).toDouble());
+    final t = (_age / lifespan).clamp(0.0, 1.0);
+    paint.color = Colors.white.withValues(alpha: 1 - t);
+    radius = startRadius * (1 - t * 0.55);
+    if (_age >= lifespan) {
+      removeFromParent();
+    }
+  }
+}

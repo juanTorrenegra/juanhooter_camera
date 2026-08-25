@@ -54,7 +54,7 @@ class MyGame extends FlameGame
   Vector2 currentPlayerPos = Vector2.zero();
   late AudioPool pool;
   double timeScale = 1.0; //game speed!
-  double cameraZoom = 1.9;
+  double cameraZoom = 2;
   static const double knockbackCameraHoldSeconds = 2.0;
 
   /// Max look-ahead offset; actual cap is also the visible viewport inset.
@@ -290,6 +290,11 @@ class MyGame extends FlameGame
     scoreNotifier.value = shipsDestroyed;
   }
 
+  void spawnEnemyExplosion(Vector2 worldPosition) {
+    universo.add(SpaceExplosionEffect(center: worldPosition));
+    unawaited(FlameAudio.play('explosion.mp3'));
+  }
+
   /// Power-ups: sube el máximo de vida de la run y actualiza al jugador.
   /// Si [healCurrentByAmount] es true, suma [amount] a la vida actual (sin pasar del nuevo máximo).
   void extendPlayerMaxHitPoints(int amount, {bool healCurrentByAmount = true}) {
@@ -342,6 +347,7 @@ class MyGame extends FlameGame
       minPlayers: 1,
       maxPlayers: 3,
     );
+    unawaited(FlameAudio.audioCache.load('explosion.mp3'));
     startBgmMusic();
 
     universo = World();
@@ -400,21 +406,21 @@ class MyGame extends FlameGame
 
     universo.add(
       CrabEnemy(
-        sprite: await Sprite.load('enemigo.png'),
+        sprite: await Sprite.load('10.png'),
         position: Vector2(620, 350),
-        size: Vector2(16, 16),
+        size: Vector2(20, 20),
         maxHitPoints: 50,
         rotationSpeed: 4.0,
         damage: 30,
       ),
     );
 
-    final rangedSprite = await Sprite.load('10.png');
+    final rangedSprite = await Sprite.load('verdePequeno.png');
     universo.add(
       RangedEnemy(
         sprite: rangedSprite,
         position: Vector2(620, 330),
-        size: Vector2(20, 20),
+        size: Vector2(18, 18),
         maxHitPoints: 40,
         rotationSpeed: 3.0,
         bulletSpeed: 50,
@@ -426,7 +432,7 @@ class MyGame extends FlameGame
       RangedEnemy(
         sprite: rangedSprite,
         position: Vector2(630, 385),
-        size: Vector2(20, 20),
+        size: Vector2(18, 18),
         maxHitPoints: 40,
         rotationSpeed: 3.0,
         bulletSpeed: 50,
