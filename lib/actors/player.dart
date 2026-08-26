@@ -263,14 +263,16 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   }
 
   void _createExplosion() {
-    final explosion = ExplosionEffect(
-      center: position.clone(),
-      particleCount: 30, // ✅ Muchas partículas
-      explosionRadius: 20, // ✅ Área grande de explosión
-      duration: _deathDuration,
+    final radius = max(size.x, size.y) * 4;
+    game.universo.add(
+      SpaceExplosionEffect(
+        center: position.clone(),
+        radius: radius,
+        durationScale: 3,
+        rippleCount: 2,
+        rippleSpeed: 55,
+      ),
     );
-
-    game.universo.add(explosion);
   }
 
   void _completeDeathSequence() {

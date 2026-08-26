@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
+import 'package:juanshooter/effects/alarm_ripple.dart';
 import 'package:juanshooter/game.dart';
 import 'package:juanshooter/hud/potency_bar.dart';
 import 'package:juanshooter/weapons/bullet.dart';
@@ -105,20 +106,19 @@ abstract class Enemigo extends SpriteComponent
     _hideWarning();
     _isActivated = true;
     onActivate();
-    _activateNearby(100);
+    _emitAlarmRipple();
   }
 
-  /// Wakes other [Enemigo]s within [radius] (chains through [activate]).
-  void _activateNearby(double radius) {
-    if (!isMounted) return;
-    for (final enemy in game.universo.children.whereType<Enemigo>()) {
-      if (identical(enemy, this) || !enemy.isMounted || enemy.isActivated) {
-        continue;
-      }
-      if (enemy.position.distanceTo(position) <= radius) {
-        enemy.activate();
-      }
-    }
+  /// Splash that expands to [alarmRadius] and wakes others as it reaches them.
+  void _emitAlarmRipple() {
+    if (!isMounted || alarmRadius <= 0) return;
+    game.universo.add(
+      AlarmRipple(
+        origin: position,
+        maxRadius: alarmRadius,
+        source: this,
+      ),
+    );
   }
 
   void deactivate() {

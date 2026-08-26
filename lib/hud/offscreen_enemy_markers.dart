@@ -9,8 +9,8 @@ import 'package:juanshooter/game.dart';
 class OffscreenEnemyMarkers extends PositionComponent
     with HasGameReference<MyGame> {
   static const double _edgePad = 20;
-  static const double _triLen = 22;
-  static const double _triHalf = 9.75;
+  static const double _triLen = 11;
+  static const double _triHalf = 6.5;
   static const double _onScreenInset = 8;
 
   OffscreenEnemyMarkers()
@@ -50,11 +50,11 @@ class OffscreenEnemyMarkers extends PositionComponent
     final zoom = cam.viewfinder.zoom.clamp(0.01, 100.0);
     final worldCenter = cam.viewfinder.position;
     final screenCenter = viewSize / 2;
-    final paint = Paint()..color = const Color(0xFF9E9E9E);
     final stroke = Paint()
-      ..color = const Color(0xFF616161)
+      ..color = const Color(0xFF9E9E9E)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
+      ..strokeWidth = 1.4
+      ..strokeJoin = StrokeJoin.round;
 
     for (final enemy in game.universo.children.whereType<Enemigo>()) {
       if (!enemy.isMounted) continue;
@@ -65,7 +65,7 @@ class OffscreenEnemyMarkers extends PositionComponent
       final dir = screen - screenCenter;
       if (dir.length2 < 1e-8) continue;
       final edge = _clampToEdge(dir, screenCenter, viewSize);
-      _drawTriangle(canvas, edge, atan2(dir.y, dir.x), paint, stroke);
+      _drawTriangle(canvas, edge, atan2(dir.y, dir.x), stroke);
     }
   }
 
@@ -85,13 +85,7 @@ class OffscreenEnemyMarkers extends PositionComponent
     return Vector2(center.x + dir.x * t, center.y + dir.y * t);
   }
 
-  void _drawTriangle(
-    Canvas canvas,
-    Vector2 at,
-    double angle,
-    Paint fill,
-    Paint stroke,
-  ) {
+  void _drawTriangle(Canvas canvas, Vector2 at, double angle, Paint stroke) {
     canvas.save();
     canvas.translate(at.x, at.y);
     canvas.rotate(angle);
@@ -100,7 +94,6 @@ class OffscreenEnemyMarkers extends PositionComponent
       ..lineTo(-_triLen * 0.45, _triHalf)
       ..lineTo(-_triLen * 0.45, -_triHalf)
       ..close();
-    canvas.drawPath(path, fill);
     canvas.drawPath(path, stroke);
     canvas.restore();
   }

@@ -148,6 +148,16 @@ class MyGame extends FlameGame
     return Vector2(viewSize.x / zoom, viewSize.y / zoom) / 2;
   }
 
+  /// True if [world] is inside the camera view, expanded by [margin] world units.
+  bool isWorldPointVisible(Vector2 world, {double margin = 0}) {
+    final cam = camara;
+    final half = _visibleWorldHalf();
+    if (cam == null || half == null) return true;
+    final center = cam.viewfinder.position;
+    return (world.x - center.x).abs() <= half.x + margin &&
+        (world.y - center.y).abs() <= half.y + margin;
+  }
+
   double _playerViewportRadius() {
     final half = _visibleWorldHalf();
     if (half == null) return cameraOuterRadius;

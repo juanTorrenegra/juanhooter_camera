@@ -96,28 +96,41 @@ class ExplosionEffect extends Component with HasGameReference<MyGame> {
 }
 
 /// Charge-like death burst: energy core, then white dots fly out to [radius]
-/// (`2 ×` the enemy's larger side).
+/// (`2 ×` the enemy's larger side by default).
 class SpaceExplosionEffect extends PositionComponent {
   final double radius;
+  final double durationScale;
+  final int rippleCount;
+  final double rippleSpeed;
   final int _dotCount;
   final Random _rng = Random();
 
   double _age = 0;
   final double _coreRadius;
   bool _burst = false;
+  final List<double> _rippleStart = [];
 
-  static const double _coreHold = 0.1;
-  static const double _coreFade = 0.32;
-  static const double _dotLife = 0.5;
+  double get _coreHold => 0.1 * durationScale;
+  double get _coreFade => 0.32 * durationScale;
+  double get _dotLife => 0.5 * durationScale;
 
-  SpaceExplosionEffect({required Vector2 center, required this.radius})
-    : _dotCount = (32 + radius * 0.35).round().clamp(32, 64),
-      _coreRadius = (radius * 0.11).clamp(1.8, 7.0),
-      super(
-        position: center.clone(),
-        anchor: Anchor.center,
-        priority: 1400,
-      );
+  SpaceExplosionEffect({
+    required Vector2 center,
+    required this.radius,
+    this.durationScale = 1,
+    this.rippleCount = 0,
+    this.rippleSpeed = 70,
+  }) : _dotCount = (32 + radius * 0.35).round().clamp(32, 64),
+       _coreRadius = (radius * 0.11).clamp(1.8, 7.0),
+       super(
+         position: center.clone(),
+         anchor: Anchor.center,
+         priority: 1400,
+       ) {
+    for (var i = 0; i < rippleCount; i++) {
+      _rippleStart.add(_coreHold + i * 0.28 * durationScale);
+    }
+  }
 
   @override
   void update(double dt) {
@@ -129,7 +142,10 @@ class SpaceExplosionEffect extends PositionComponent {
       _spawnDots();
     }
 
-    if (_age > _coreHold + _dotLife && children.isEmpty) {
+    final lastRippleEnd = _rippleStart.isEmpty
+        ? 0.0
+        : _rippleStart.last + radius / rippleSpeed + 0.2;
+    if (_age > max(_coreHold + _dotLife, lastRippleEnd) && children.isEmpty) {
       removeFromParent();
     }
   }
@@ -158,12 +174,33 @@ class SpaceExplosionEffect extends PositionComponent {
   void render(Canvas canvas) {
     super.render(canvas);
     final a = _coreAlpha;
-    if (a <= 0) return;
-    canvas.drawCircle(
-      Offset.zero,
-      _coreRadius,
-      Paint()..color = Colors.white.withValues(alpha: a),
-    );
+    if (a > 0) {
+      canvas.drawCircle(
+        Offset.zero,
+        _coreRadius,
+        Paint()..color = Colors.white.withValues(alpha: a),
+      );
+    }
+    _drawRipples(canvas);
+  }
+
+  void _drawRipples(Canvas canvas) {
+    if (rippleCount <= 0 || rippleSpeed <= 0) return;
+    for (final start in _rippleStart) {
+      final t = _age - start;
+      if (t <= 0) continue;
+      final r = t * rippleSpeed;
+      if (r > radius * 1.05) continue;
+      final fade = (1 - (r / radius).clamp(0.0, 1.0));
+      canvas.drawCircle(
+        Offset.zero,
+        r,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.45 * fade)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4,
+      );
+    }
   }
 }
 
