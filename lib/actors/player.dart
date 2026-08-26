@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:juanshooter/effects/charge_aim_effect.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
 import 'package:juanshooter/game.dart';
 import 'package:juanshooter/hud/potency_bar.dart';
@@ -310,6 +311,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     add(CircleHitbox()..collisionType = CollisionType.active);
+    add(ChargeAimEffect());
   }
 
   @override

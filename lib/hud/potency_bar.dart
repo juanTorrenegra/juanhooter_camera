@@ -77,6 +77,7 @@ class PotencyBar extends PositionComponent with HasGameReference<MyGame> {
   bool _chargeSoundStarted = false;
 
   bool get isCharging => _charging;
+  double get holdSeconds => _holdSeconds;
 
   PotencyBar({Vector2? size})
     : super(
