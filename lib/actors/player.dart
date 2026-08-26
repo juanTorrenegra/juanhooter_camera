@@ -311,7 +311,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     add(CircleHitbox()..collisionType = CollisionType.active);
-    add(ChargeAimEffect());
+    game.universo.add(ChargeAimEffect());
   }
 
   @override

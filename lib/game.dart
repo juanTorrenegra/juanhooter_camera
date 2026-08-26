@@ -14,6 +14,7 @@ import 'package:juanshooter/actors/ranged_enemy.dart';
 import 'package:juanshooter/actors/spike_enemy.dart';
 import 'package:juanshooter/actors/crab_enemy.dart';
 import 'package:juanshooter/hud/game_hud.dart';
+import 'package:juanshooter/hud/offscreen_enemy_markers.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:juanshooter/overlays/game_over.dart';
 import 'package:juanshooter/weapons/bullet.dart';
@@ -290,8 +291,11 @@ class MyGame extends FlameGame
     scoreNotifier.value = shipsDestroyed;
   }
 
-  void spawnEnemyExplosion(Vector2 worldPosition) {
-    universo.add(SpaceExplosionEffect(center: worldPosition));
+  void spawnEnemyExplosion(Vector2 worldPosition, Vector2 enemySize) {
+    final radius = max(enemySize.x, enemySize.y) * 2;
+    universo.add(
+      SpaceExplosionEffect(center: worldPosition, radius: radius),
+    );
     unawaited(FlameAudio.play('explosion.mp3'));
   }
 
@@ -415,6 +419,8 @@ class MyGame extends FlameGame
       ),
     );
 
+    await _spawnEdgePatrolCrabs();
+
     final rangedSprite = await Sprite.load('verdePequeno.png');
     universo.add(
       RangedEnemy(
@@ -443,12 +449,60 @@ class MyGame extends FlameGame
 
     hud = GameHud()..priority = 100;
     scoreNotifier.value = shipsDestroyed;
+    camara?.viewport.add(OffscreenEnemyMarkers());
     camara?.viewport.add(hud);
 
     currentPlayerPos = player.position.clone();
 
     camara?.stop();
     _setViewfinderPosition(player.position);
+  }
+
+  /// Four patrol crabs just outside each viewport edge (16 total) to test markers.
+  Future<void> _spawnEdgePatrolCrabs() async {
+    final sprite = await Sprite.load('10.png');
+    final origin = player.position;
+    final half =
+        _visibleWorldHalf() ??
+        Vector2(logicalWidth / (2 * cameraZoom), logicalHeight / (2 * cameraZoom));
+    const outside = 150.0;
+    const perSide = 4;
+    const patrol = 80.0;
+
+    List<double> spread(double from, double to, int n) {
+      if (n <= 1) return [(from + to) / 2];
+      return [for (var i = 0; i < n; i++) from + (to - from) * i / (n - 1)];
+    }
+
+    final alongY = spread(origin.y - half.y * 0.7, origin.y + half.y * 0.7, perSide);
+    final alongX = spread(origin.x - half.x * 0.7, origin.x + half.x * 0.7, perSide);
+    final leftX = origin.x - half.x - outside;
+    final rightX = origin.x + half.x + outside;
+    final topY = origin.y - half.y - outside;
+    final bottomY = origin.y + half.y + outside;
+
+    void addCrab(double x, double y) {
+      universo.add(
+        CrabEnemy(
+          sprite: sprite,
+          position: Vector2(x, y),
+          size: Vector2(20, 20),
+          maxHitPoints: 50,
+          rotationSpeed: 4.0,
+          damage: 30,
+          patrolRadius: patrol,
+        ),
+      );
+    }
+
+    for (final y in alongY) {
+      addCrab(leftX, y);
+      addCrab(rightX, y);
+    }
+    for (final x in alongX) {
+      addCrab(x, topY);
+      addCrab(x, bottomY);
+    }
   }
 
   @override

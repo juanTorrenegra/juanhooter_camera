@@ -95,53 +95,91 @@ class ExplosionEffect extends Component with HasGameReference<MyGame> {
   }
 }
 
-/// Compact white debris burst for enemy deaths in space.
+/// Charge-like death burst: energy core, then white dots fly out to [radius]
+/// (`2 ×` the enemy's larger side).
 class SpaceExplosionEffect extends PositionComponent {
-  static const int _count = 18;
+  final double radius;
+  final int _dotCount;
+  final Random _rng = Random();
 
-  SpaceExplosionEffect({required Vector2 center})
-    : super(
+  double _age = 0;
+  final double _coreRadius;
+  bool _burst = false;
+
+  static const double _coreHold = 0.1;
+  static const double _coreFade = 0.32;
+  static const double _dotLife = 0.5;
+
+  SpaceExplosionEffect({required Vector2 center, required this.radius})
+    : _dotCount = (32 + radius * 0.35).round().clamp(32, 64),
+      _coreRadius = (radius * 0.11).clamp(1.8, 7.0),
+      super(
         position: center.clone(),
         anchor: Anchor.center,
         priority: 1400,
       );
 
   @override
-  Future<void> onLoad() async {
-    final rng = Random();
-    for (var i = 0; i < _count; i++) {
-      final angle = rng.nextDouble() * 2 * pi;
-      final speed = 35 + rng.nextDouble() * 90;
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+
+    if (!_burst && _age >= _coreHold) {
+      _burst = true;
+      _spawnDots();
+    }
+
+    if (_age > _coreHold + _dotLife && children.isEmpty) {
+      removeFromParent();
+    }
+  }
+
+  void _spawnDots() {
+    for (var i = 0; i < _dotCount; i++) {
+      final angle = _rng.nextDouble() * 2 * pi;
+      final reach = radius * (0.55 + _rng.nextDouble() * 0.45);
       add(
-        _SpaceSpark(
-          velocity: Vector2(cos(angle), sin(angle)) * speed,
-          lifespan: 0.28 + rng.nextDouble() * 0.32,
-          startRadius: 0.7 + rng.nextDouble() * 1.4,
+        _OutboundDot(
+          direction: Vector2(cos(angle), sin(angle)),
+          travel: reach,
+          lifespan: _dotLife * (0.75 + _rng.nextDouble() * 0.35),
+          startRadius: 0.7 + _rng.nextDouble() * 1.1,
         ),
       );
     }
   }
 
+  double get _coreAlpha {
+    if (_age <= _coreHold) return 1;
+    return (1 - (_age - _coreHold) / _coreFade).clamp(0.0, 1.0);
+  }
+
   @override
-  void update(double dt) {
-    super.update(dt);
-    if (children.isEmpty) {
-      removeFromParent();
-    }
+  void render(Canvas canvas) {
+    super.render(canvas);
+    final a = _coreAlpha;
+    if (a <= 0) return;
+    canvas.drawCircle(
+      Offset.zero,
+      _coreRadius,
+      Paint()..color = Colors.white.withValues(alpha: a),
+    );
   }
 }
 
-class _SpaceSpark extends CircleComponent {
-  final Vector2 velocity;
+class _OutboundDot extends CircleComponent {
+  final Vector2 _velocity;
   final double lifespan;
   final double startRadius;
   double _age = 0;
 
-  _SpaceSpark({
-    required this.velocity,
+  _OutboundDot({
+    required Vector2 direction,
+    required double travel,
     required this.lifespan,
     required this.startRadius,
-  }) : super(
+  }) : _velocity = direction * (travel / lifespan),
+       super(
          radius: startRadius,
          anchor: Anchor.center,
          paint: Paint()..color = Colors.white,
@@ -151,11 +189,10 @@ class _SpaceSpark extends CircleComponent {
   void update(double dt) {
     super.update(dt);
     _age += dt;
-    position.add(velocity * dt);
-    velocity.scale(pow(0.08, dt).toDouble());
+    position.add(_velocity * dt);
     final t = (_age / lifespan).clamp(0.0, 1.0);
     paint.color = Colors.white.withValues(alpha: 1 - t);
-    radius = startRadius * (1 - t * 0.55);
+    radius = startRadius * (1 - t * 0.4);
     if (_age >= lifespan) {
       removeFromParent();
     }

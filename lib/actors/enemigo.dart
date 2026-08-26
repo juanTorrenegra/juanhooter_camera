@@ -48,6 +48,7 @@ abstract class Enemigo extends SpriteComponent
   @override
   Future<void> onLoad() async {
     add(CircleHitbox(collisionType: CollisionType.active));
+    add(EnemyHealthBar(host: this));
   }
 
   @override
@@ -199,7 +200,58 @@ abstract class Enemigo extends SpriteComponent
 
   void onDeath() {
     game.incrementShipsDestroyed();
-    game.spawnEnemyExplosion(position);
+    game.spawnEnemyExplosion(position.clone(), size.clone());
+  }
+}
+
+/// Red HP bar above an enemy; stays world-upright and tracks [Enemigo.hitPoints].
+class EnemyHealthBar extends PositionComponent {
+  final Enemigo host;
+
+  EnemyHealthBar({required this.host})
+    : super(
+        size: Vector2(_barWidthFor(host), 3),
+        anchor: Anchor.bottomCenter,
+        priority: 90,
+      );
+
+  static double _barWidthFor(Enemigo host) =>
+      (host.size.x * 1.2).clamp(16.0, 36.0);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    final lift = host.size.y * 0.55 + 4;
+    position.setValues(0, -lift);
+    position.rotate(-host.angle);
+    angle = -host.angle;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final ratio = host.maxHitPoints > 0
+        ? (host.hitPoints / host.maxHitPoints).clamp(0.0, 1.0)
+        : 0.0;
+    final rect = Rect.fromLTWH(0, 0, size.x, size.y);
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(1));
+
+    canvas.drawRRect(rrect, Paint()..color = const Color(0xCC1A0000));
+    if (ratio > 0) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.x * ratio, size.y),
+          const Radius.circular(1),
+        ),
+        Paint()..color = const Color(0xFFE53935),
+      );
+    }
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..color = const Color(0xAAFF8A80)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.5,
+    );
   }
 }
 
