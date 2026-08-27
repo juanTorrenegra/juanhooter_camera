@@ -45,6 +45,7 @@ class RangedEnemy extends Enemigo {
     double shootingThreshold = 10.0, //Grados de margen (10 por defecto)
     double shootingOffset = 15.0, // offset por defecto de 15.0
     int damage = 10,
+    double alarmRadius = 100,
   }) : _shootInterval = shootInterval,
        _bulletSpeed = bulletSpeed,
        _shootingThreshold =
@@ -60,6 +61,7 @@ class RangedEnemy extends Enemigo {
          shield: shield,
          movementSpeed: movementSpeed,
          rotationSpeed: rotationSpeed, // ✅ Pasa la velocidad de rotación
+         alarmRadius: alarmRadius,
        );
 
   @override

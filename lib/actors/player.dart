@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:juanshooter/effects/charge_aim_effect.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
 import 'package:juanshooter/game.dart';
+import 'package:juanshooter/hud/potency_bar.dart';
 import 'package:juanshooter/overlays/game_over.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 import 'package:juanshooter/utils/game_utils.dart';
@@ -21,6 +23,19 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   //double _baseSpeed = 80;;
   double currentSpeed = 50;
   double _angle = 0;
+  bool _isChargeSlowed = false;
+  double _speedBeforeCharge = 50;
+  final Vector2 _knockbackRemaining = Vector2.zero();
+  double knockbackSpeed = 120;
+
+  /// Current space-drift velocity (world units per second).
+  final Vector2 velocity = Vector2.zero();
+
+  /// Seconds to reach [currentSpeed] from a standstill.
+  double accelTime = 2.0;
+
+  /// Seconds to coast to a stop after releasing thrust.
+  double coastTime = 1.2;
 
   /// Valores por defecto; [MyGame] asigna `playerMaxHitPoints` al cargar / recrear.
   int maxHitPoints = 100;
@@ -65,10 +80,121 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     game.hud.updateHealthBar(currentHitPoints, maxHitPoints);
   }
 
+  void applyChargeSlowdown() {
+    if (_isChargeSlowed || _isDying) return;
+    _speedBeforeCharge = currentSpeed;
+    currentSpeed = (currentSpeed - ChargeShot.speedPenalty).clamp(
+      1.0,
+      currentSpeed,
+    );
+    _isChargeSlowed = true;
+  }
+
+  void restoreChargeSpeed() {
+    if (!_isChargeSlowed) return;
+    currentSpeed = _speedBeforeCharge;
+    _isChargeSlowed = false;
+  }
+
+  void startKnockback(Vector2 delta, {double? speed}) {
+    if (_isDying || delta.length2 <= 0) return;
+    _knockbackRemaining.setFrom(delta);
+    if (speed != null) {
+      knockbackSpeed = speed;
+    }
+  }
+
+  void clearKnockback() {
+    _knockbackRemaining.setZero();
+  }
+
+  void clearVelocity() {
+    velocity.setZero();
+  }
+
+  /// Keeps the ship inside the visible camera rectangle and kills slide into the walls.
+  void containInWorldRect({
+    required double minX,
+    required double maxX,
+    required double minY,
+    required double maxY,
+  }) {
+    if (position.x < minX) {
+      position.x = minX;
+      if (velocity.x < 0) velocity.x = 0;
+      if (_knockbackRemaining.x < 0) _knockbackRemaining.x = 0;
+    } else if (position.x > maxX) {
+      position.x = maxX;
+      if (velocity.x > 0) velocity.x = 0;
+      if (_knockbackRemaining.x > 0) _knockbackRemaining.x = 0;
+    }
+    if (position.y < minY) {
+      position.y = minY;
+      if (velocity.y < 0) velocity.y = 0;
+      if (_knockbackRemaining.y < 0) _knockbackRemaining.y = 0;
+    } else if (position.y > maxY) {
+      position.y = maxY;
+      if (velocity.y > 0) velocity.y = 0;
+      if (_knockbackRemaining.y > 0) _knockbackRemaining.y = 0;
+    }
+  }
+
+  void _steerVelocityToward(Vector2 target, double rate, double dt) {
+    final delta = target - velocity;
+    final distance = delta.length;
+    final maxStep = rate * dt;
+    if (distance <= maxStep) {
+      velocity.setFrom(target);
+      return;
+    }
+    velocity.add(delta.normalized() * maxStep);
+  }
+
+  void _updateSpaceMovement(double dt) {
+    final move = game.hud.effectiveMovementDelta;
+    final maxSpeed = currentSpeed.clamp(1.0, 10000.0);
+
+    if (move.length2 > 0.0001) {
+      final accel = maxSpeed / accelTime.clamp(0.05, 20.0);
+      _steerVelocityToward(move * maxSpeed, accel, dt);
+    } else {
+      final decel = maxSpeed / coastTime.clamp(0.05, 30.0);
+      _steerVelocityToward(Vector2.zero(), decel, dt);
+    }
+
+    if (velocity.length > maxSpeed) {
+      velocity.scale(maxSpeed / velocity.length);
+    }
+
+    if (velocity.length2 > 1e-8) {
+      position.add(velocity * dt);
+    }
+  }
+
+  void _updateKnockback(double dt) {
+    if (_knockbackRemaining.length2 < 1e-8) return;
+    final remaining = _knockbackRemaining.length;
+    final step = knockbackSpeed * dt;
+    if (step >= remaining) {
+      position.add(_knockbackRemaining);
+      _knockbackRemaining.setZero();
+      return;
+    }
+    final dir = _knockbackRemaining.normalized();
+    position.add(dir * step);
+    _knockbackRemaining.scale((remaining - step) / remaining);
+  }
+
   void die() {
     if (_isDying) return; // ✅ Evitar múltiples llamadas
 
     _isDying = true;
+    restoreChargeSpeed();
+    clearKnockback();
+    clearVelocity();
+    if (game.hud.isLoaded) {
+      game.hud.cancelCharge();
+    }
     print("Player died! Starting death sequence...");
 
     // ✅ Detener enemigos activos y limpiar balas enemigas para el reset
@@ -76,6 +202,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     game.clearEnemyBullets();
 
     _createExplosion();
+    game.playSfx('death1.mp3');
 
     print('🎮 Programando GameOverComponent en 1.5 segundos...');
 
@@ -137,14 +264,16 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   }
 
   void _createExplosion() {
-    final explosion = ExplosionEffect(
-      center: position.clone(),
-      particleCount: 30, // ✅ Muchas partículas
-      explosionRadius: 20, // ✅ Área grande de explosión
-      duration: _deathDuration,
+    final radius = max(size.x, size.y) * 4;
+    game.universo.add(
+      SpaceExplosionEffect(
+        center: position.clone(),
+        radius: radius,
+        durationScale: 3,
+        rippleCount: 2,
+        rippleSpeed: 55,
+      ),
     );
-
-    game.universo.add(explosion);
   }
 
   void _completeDeathSequence() {
@@ -168,7 +297,11 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     isVisible = true;
 
     // Restaurar velocidad
-    currentSpeed = 80;
+    restoreChargeSpeed();
+    currentSpeed = 50;
+
+    clearKnockback();
+    clearVelocity();
 
     // Restaurar posición y rotación
     position = Vector2(380, 380);
@@ -181,6 +314,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
   @override
   Future<void> onLoad() async {
     add(CircleHitbox()..collisionType = CollisionType.active);
+    game.universo.add(ChargeAimEffect());
   }
 
   @override
@@ -200,6 +334,9 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
 
     // ✅ Solo actualizar movimiento si no está muriendo
     if (!_isDying) {
+      _updateKnockback(dt);
+      _updateSpaceMovement(dt);
+
       // Manejar invulnerabilidad y parpadeo
       if (isInvulnerable) {
         invulnerabilityTimer -= dt;
@@ -214,12 +351,6 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
           isInvulnerable = false;
           isVisible = true;
         }
-      }
-
-      // Movement: joystick; en web también WASD (ver [GameHud.effectiveMovementDelta]).
-      final move = game.hud.effectiveMovementDelta;
-      if (move.length2 > 0) {
-        position.add(move * currentSpeed * dt);
       }
 
       // Rotación: look joystick; en web también sigue al mouse
@@ -240,7 +371,11 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     }
   }
 
-  void shoot() {
+  void shoot({
+    int damage = 4,
+    double sizeScale = 1,
+    String sfx = 'fire_2.mp3',
+  }) {
     if (_isDying) return;
     final shootPosition = calculateShootPosition(
       position,
@@ -249,8 +384,14 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
       10.0, // Offset adicional desde el borde
     );
 
-    final bullet = Bullet(position: shootPosition, angle: angle, speed: 100);
+    final bullet = Bullet(
+      position: shootPosition,
+      angle: angle,
+      speed: 100,
+      damage: damage,
+      sizeScale: sizeScale,
+    );
     game.universo.add(bullet);
-    game.pool.start();
+    game.playShotSound(sfx);
   }
 }

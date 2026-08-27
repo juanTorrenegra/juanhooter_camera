@@ -58,6 +58,7 @@ class _VisorOverlayState extends State<VisorOverlay> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(height: 30),
                 ClipRect(
                   child: Text(
                     'DARBALA',
@@ -69,7 +70,7 @@ class _VisorOverlayState extends State<VisorOverlay> {
                       color: Colors.white54,
                       fontFamily: 'Megatrans',
                       fontWeight: FontWeight.w400,
-                      fontSize: 80,
+                      fontSize: 150,
                       letterSpacing: 60,
                       height: 1.0,
                     ),
@@ -98,13 +99,13 @@ class _VisorOverlayState extends State<VisorOverlay> {
                     'Jugar',
                     style: TextStyle(
                       fontFamily: "Megatrans",
-                      fontSize: 18,
+                      fontSize: 25,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 5,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
                     Flame.device.setLandscapeRightOnly();
@@ -125,13 +126,13 @@ class _VisorOverlayState extends State<VisorOverlay> {
                     'Configuracion',
                     style: TextStyle(
                       fontFamily: "Megatrans",
-                      fontSize: 18,
+                      fontSize: 25,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 5,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
                     Flame.device.setLandscapeLeftOnly();
@@ -151,7 +152,7 @@ class _VisorOverlayState extends State<VisorOverlay> {
                     'creditos',
                     style: TextStyle(
                       fontFamily: "Megatrans",
-                      fontSize: 18,
+                      fontSize: 25,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 5,
                     ),

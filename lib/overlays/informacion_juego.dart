@@ -11,7 +11,8 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
   static const double _valueColumnX = 170.0;
   static const double _skewX = -0.14;
   static const double _borderRadius = 12.0;
-  static const String _fontFamily = 'ava';
+
+  static const String _fontFamily = 'Ava';
 
   late final List<TextComponent> _infoLines;
 
@@ -36,7 +37,6 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     await super.onLoad();
 
     anchor = Anchor.topLeft;
-    position = Vector2(80, 220);
 
     _infoLines = [];
 
@@ -141,9 +141,8 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     canvas.drawRRect(
       rrect,
       Paint()
-        ..color = Colors.black
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
+        ..color = const Color.fromARGB(19, 31, 168, 157)
+        ..style = PaintingStyle.fill,
     );
 
     super.render(canvas);
@@ -199,7 +198,7 @@ class InformacionJuego extends PositionComponent with HasGameReference<MyGame> {
     if (isMounted) {
       removeFromParent();
     } else {
-      game.camara?.viewport.add(this);
+      game.hud.add(this);
     }
   }
 

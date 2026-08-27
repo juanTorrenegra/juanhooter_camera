@@ -3,9 +3,10 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/game.dart';
+import 'package:juanshooter/weapons/bullet.dart';
 
 class EnemyBullet extends SpriteComponent
-    with HasGameReference<MyGame>, CollisionCallbacks {
+    with HasGameReference<MyGame>, CollisionCallbacks, ProjectileLifetimeAndCull {
   final double speed;
   final Vector2 _direction = Vector2.zero();
   final int damage;
@@ -40,14 +41,7 @@ class EnemyBullet extends SpriteComponent
   void update(double dt) {
     super.update(dt);
     position += _direction * speed * dt;
-
-    // Eliminar si sale de los límites
-    if (position.x < -100 ||
-        position.y < -100 ||
-        position.x > 1700 ||
-        position.y > 1700) {
-      removeFromParent();
-    }
+    tickProjectileLifetime(dt);
   }
 
   @override

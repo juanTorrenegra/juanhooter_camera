@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
+import 'package:juanshooter/effects/alarm_ripple.dart';
 
 enum SpikeState { charging, bullRush }
 
@@ -140,20 +141,16 @@ class SpikeEnemy extends Enemigo {
     _stateTimer = 0;
   }
 
-  /// Activates nearby enemies that extend [Enemigo].
+  /// Broadcasts a larger alarm splash; nearby ships wake as the wave reaches them.
   void scream() {
-    if (!isMounted) return;
-
-    int activated = 0;
-    for (final enemy in game.universo.children.whereType<Enemigo>()) {
-      if (enemy == this || !enemy.isMounted || enemy.isActivated) continue;
-      if (enemy.position.distanceTo(position) <= screamRadius) {
-        enemy.activate();
-        activated++;
-      }
-    }
-
-    print('📣 SpikeEnemy scream -> activated $activated nearby enemies');
+    if (!isMounted || screamRadius <= 0) return;
+    game.universo.add(
+      AlarmRipple(
+        origin: position,
+        maxRadius: screamRadius,
+        source: this,
+      ),
+    );
   }
 
   @override

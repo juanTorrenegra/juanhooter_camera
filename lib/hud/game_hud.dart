@@ -1,12 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flame/components.dart';
-
+import 'package:flame/events.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Matrix4;
 import 'package:flutter/services.dart';
 import 'package:juanshooter/game.dart';
+import 'package:juanshooter/hud/potency_bar.dart';
+import 'package:juanshooter/overlays/informacion_juego.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 class HealthBar extends PositionComponent with HasGameReference<MyGame> {
@@ -112,7 +114,8 @@ class HealthBar extends PositionComponent with HasGameReference<MyGame> {
       Rect.fromLTWH(0, 0, width, height),
       Radius.circular(borderRadius),
     );
-    final backgroundPaint = Paint()..color = Colors.red.withAlpha(150);
+    final backgroundPaint = Paint()
+      ..color = const Color.fromARGB(88, 244, 54, 54).withAlpha(150);
 
     final healthPercentage = maxHealth > 0
         ? (currentHealth / maxHealth).clamp(0.0, 1.0)
@@ -138,7 +141,7 @@ class HealthBar extends PositionComponent with HasGameReference<MyGame> {
   }
 
   Color _getHealthColor(double percentage) {
-    if (percentage > 0.6) return Colors.cyanAccent;
+    if (percentage > 0.6) return const Color.fromARGB(130, 24, 255, 255);
     if (percentage > 0.3) return Colors.orange;
     return Colors.red;
   }
@@ -160,7 +163,8 @@ class HealthBar extends PositionComponent with HasGameReference<MyGame> {
   }
 }
 
-class GameHud extends PositionComponent with HasGameReference<MyGame> {
+class GameHud extends PositionComponent
+    with HasGameReference<MyGame>, TapCallbacks {
   /// Touch controls: only created on mobile/desktop apps, never on web.
   JoystickComponent? movementJoystick;
   JoystickComponent? lookJoystick;
@@ -168,6 +172,8 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   late final HudButtonComponent menu;
   late final HealthBar healthBar;
   late final HudButtonComponent debugMenuButton;
+  late final InformacionJuego informacionJuego;
+  late final PotencyBar potencyBar;
 
   /// Web (WASD): dirección normalizada; en otras plataformas permanece en cero.
   final Vector2 _keyboardMovement = Vector2.zero();
@@ -175,6 +181,7 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
   bool _hasWebMouseLookDelta = false;
 
   bool _spaceWasDown = false;
+  bool _chargeHeld = false;
 
   /// Movimiento: WASD en web; joysticks en app.
   Vector2 get effectiveMovementDelta {
@@ -229,9 +236,52 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
 
     final spaceDown = kb.isLogicalKeyPressed(LogicalKeyboardKey.space);
     if (spaceDown && !_spaceWasDown && !game.paused) {
-      game.player.shoot();
+      beginCharge();
+    } else if (!spaceDown && _spaceWasDown) {
+      releaseCharge();
     }
     _spaceWasDown = spaceDown;
+  }
+
+  void beginCharge() {
+    if (_chargeHeld || game.paused || !game.player.isMounted) return;
+    _chargeHeld = true;
+    potencyBar.beginCharge();
+    game.player.applyChargeSlowdown();
+  }
+
+  void releaseCharge() {
+    if (!_chargeHeld) return;
+    _chargeHeld = false;
+    final shot = potencyBar.releaseCharge();
+    game.player.restoreChargeSpeed();
+    if (shot != null && !game.paused && game.player.isMounted) {
+      game.player.shoot(
+        damage: shot.damage,
+        sizeScale: shot.sizeScale,
+        sfx: shot.shotSound,
+      );
+    }
+  }
+
+  void cancelCharge() {
+    if (_chargeHeld) {
+      _chargeHeld = false;
+      game.player.restoreChargeSpeed();
+    }
+    potencyBar.cancelCharge();
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    if (!kIsWeb) return;
+    beginCharge();
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    if (!kIsWeb) return;
+    releaseCharge();
   }
 
   @override
@@ -276,14 +326,17 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         ),
       );
       shootButton = HudButtonComponent(
-        button: CircleComponent(
-          radius: 40,
-          paint: Paint()
-            ..color = Colors.cyan.withAlpha(50)
-            ..style = PaintingStyle.fill
-            ..strokeWidth = 0.3,
+        button: SkewedShootPad(
+          fillColor: Colors.cyan.withAlpha(50),
+          strokeColor: Colors.cyan.withAlpha(180),
         ),
-        onPressed: () => game.player.shoot(),
+        buttonDown: SkewedShootPad(
+          fillColor: Colors.cyan.withAlpha(140),
+          strokeColor: Colors.cyanAccent,
+        ),
+        onPressed: beginCharge,
+        onReleased: releaseCharge,
+        onCancelled: releaseCharge,
       );
     }
 
@@ -299,10 +352,15 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         ),
       ),
       onPressed: () {
+        game.playSfx('menu1.mp3');
         game.overlays.add("MainMenu");
-        //game.setTimeScale(0.0);
-        game.pauseEngine();
         game.pauseBgmMusic();
+        // Let the SFX start on this click before the Flame ticker stops.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (game.overlays.isActive('MainMenu')) {
+            game.pauseEngine();
+          }
+        });
       },
     );
     healthBar = HealthBar(
@@ -324,6 +382,9 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
       },
     );
 
+    informacionJuego = InformacionJuego()..priority = 1000;
+    potencyBar = PotencyBar();
+
     add(menu);
     final move = movementJoystick;
     final look = lookJoystick;
@@ -333,8 +394,14 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
     if (shoot != null) add(shoot);
     add(healthBar);
     add(debugMenuButton);
+    add(informacionJuego);
+    add(potencyBar);
 
     _positionComponents();
+  }
+
+  void toggleGameInfo() {
+    informacionJuego.toggleVisibility();
   }
 
   void updateHealthBar(int currentHealth, int maxHealth) {
@@ -355,12 +422,50 @@ class GameHud extends PositionComponent with HasGameReference<MyGame> {
         Vector2(MyGame.logicalWidth, MyGame.logicalHeight);
     if (viewSize.x <= 0 || viewSize.y <= 0) return;
 
+    size = viewSize;
+    position = Vector2.zero();
+
     final joystickY = viewSize.y * 3 / 4;
     movementJoystick?.position = Vector2(viewSize.x * 1 / 8, joystickY);
     lookJoystick?.position = Vector2(viewSize.x * 7 / 8, joystickY);
-    shootButton?.position = Vector2(viewSize.x - 200, 40);
+    shootButton?.position = Vector2(viewSize.x - 350, 40);
     menu.position = Vector2(viewSize.x / 2 - 15, viewSize.y - 60);
     healthBar.position = Vector2(200, 80);
     debugMenuButton.position = Vector2(10, 40);
+    informacionJuego.position = Vector2(80, 260);
+    potencyBar.position = Vector2((viewSize.x - potencyBar.size.x) / 2, 24);
+  }
+}
+
+/// Opposite skew of [InformacionJuego] (`-0.14`).
+class SkewedShootPad extends PositionComponent {
+  static const double skewX = 0.30;
+
+  final Color fillColor;
+  final Color strokeColor;
+
+  SkewedShootPad({
+    required this.fillColor,
+    required this.strokeColor,
+    Vector2? size,
+  }) : super(size: size ?? Vector2(250, 80));
+
+  @override
+  void render(Canvas canvas) {
+    canvas.save();
+    canvas.transform(vm.Matrix4.skewX(skewX).storage);
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.x, size.y),
+      const Radius.circular(10),
+    );
+    canvas.drawRRect(rrect, Paint()..color = fillColor);
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..color = strokeColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    canvas.restore();
   }
 }

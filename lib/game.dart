@@ -12,10 +12,11 @@ import 'package:juanshooter/actors/enemigo.dart';
 import 'package:juanshooter/actors/player.dart';
 import 'package:juanshooter/actors/ranged_enemy.dart';
 import 'package:juanshooter/actors/spike_enemy.dart';
+import 'package:juanshooter/actors/crab_enemy.dart';
 import 'package:juanshooter/hud/game_hud.dart';
+import 'package:juanshooter/hud/offscreen_enemy_markers.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:juanshooter/overlays/game_over.dart';
-import 'package:juanshooter/overlays/informacion_juego.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 import 'package:juanshooter/weapons/enemy_bullet.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
@@ -46,24 +47,47 @@ class MyGame extends FlameGame
   final ValueNotifier<int> scoreNotifier = ValueNotifier<int>(0);
   int shipsDestroyed = 0;
   late Player player;
-  late RangedEnemy mineroTorretas;
-  late RangedEnemy enemigo1;
-  late Enemigo enemigo2;
-  late Enemigo enemigo3;
-  late Enemigo enemigo4;
-  late Enemigo enemigo5;
-  late Enemigo enemigo6;
-  late Enemigo enemigo7;
-  late Enemigo enemigo8;
+  late RangedEnemy enemigo2;
 
   late final GameHud hud;
   late final World universo;
   CameraComponent? camara;
   Vector2 currentPlayerPos = Vector2.zero();
   late AudioPool pool;
+  final Map<String, AudioPlayer> _sfxPlayers = {};
   double timeScale = 1.0; //game speed!
-  double cameraZoom = 1.9;
-  late InformacionJuego informacionJuego;
+  double cameraZoom = 2;
+  static const double knockbackCameraHoldSeconds = 2.0;
+
+  /// How far the viewfinder leads the ship (world units). Screen center sits
+  /// this far toward facing/thrust, so the ship sits the same distance opposite.
+  /// Tweak this if 50 feels too tight or too wide.
+  static const double cameraLookAheadRadius = 40;
+
+  /// World-unit padding so the ship cannot reach the viewport edge.
+  static const double cameraViewportMargin = 60;
+
+  // --- Camera chase speeds (world units / sec). Tweak these. ---
+  // Player cruise is ~50. Thrust chase must be *faster* so look-ahead can form.
+  /// Holding a move direction (WASD / movement stick). Faster than the ship.
+  static const double cameraThrustSpeed = 80;
+
+  /// Quick swipe / not holding: slowly reframe toward the new facing.
+  static const double cameraFacingSpeed = 20;
+
+  /// Seconds to ease from 0 up to the current chase speed (spacey, not snappy).
+  static const double cameraEaseInSeconds = 0.85;
+
+  /// Move input shorter than this uses facing speed (a swipe, not a hold).
+  static const double cameraThrustHoldDelay = 0.14;
+
+  /// World units per second for knockback slides (player and enemies).
+  double knockbackSpeed = 80;
+  double _knockbackCameraHoldRemaining = 0;
+  final Vector2 _cameraIntentDir = Vector2.zero();
+  bool _hasCameraIntent = false;
+  double _cameraChaseSpeed = 0;
+  double _moveHoldTimer = 0;
 
   late ParallaxComponent spaceParallax;
   double spikeCurveStrength = 0.35;
@@ -85,6 +109,170 @@ class MyGame extends FlameGame
       camara!.viewfinder.zoom = cameraZoom;
       print('Zoom set to: ${cameraZoom}x');
     }
+  }
+
+  /// Knockback hits: freeze look-ahead so the viewfinder does not jump.
+  /// Enemies without knockback should not call this.
+  void detachViewfinderForKnockback() {
+    camara?.stop();
+    _knockbackCameraHoldRemaining = knockbackCameraHoldSeconds;
+  }
+
+  void applyPlayerKnockback(Vector2 delta, {double? speed}) {
+    if (!player.isMounted || delta.length2 <= 0) return;
+    player.startKnockback(delta, speed: speed ?? knockbackSpeed);
+    detachViewfinderForKnockback();
+  }
+
+  void snapViewfinderToPlayer() {
+    _knockbackCameraHoldRemaining = 0;
+    _hasCameraIntent = false;
+    _cameraChaseSpeed = 0;
+    _moveHoldTimer = 0;
+    _cameraIntentDir.setZero();
+    camara?.stop();
+    if (camara != null && player.isMounted) {
+      _setViewfinderPosition(player.position);
+    }
+  }
+
+  /// Viewfinder.position is a copy; mutating it in place does not move the camera.
+  void _setViewfinderPosition(Vector2 worldPoint) {
+    camara?.viewfinder.position = worldPoint.clone();
+  }
+
+  void _translateViewfinder(Vector2 delta) {
+    final vf = camara?.viewfinder;
+    if (vf == null) return;
+    vf.position = vf.position + delta;
+  }
+
+  Vector2? _visibleWorldHalf() {
+    final cam = camara;
+    if (cam == null) return null;
+    final viewSize = cam.viewport.virtualSize;
+    final zoom = cam.viewfinder.zoom.clamp(0.01, 100.0);
+    if (viewSize.x <= 0 || viewSize.y <= 0) return null;
+    return Vector2(viewSize.x / zoom, viewSize.y / zoom) / 2;
+  }
+
+  /// True if [world] is inside the camera view, expanded by [margin] world units.
+  bool isWorldPointVisible(Vector2 world, {double margin = 0}) {
+    final cam = camara;
+    final half = _visibleWorldHalf();
+    if (cam == null || half == null) return true;
+    final center = cam.viewfinder.position;
+    return (world.x - center.x).abs() <= half.x + margin &&
+        (world.y - center.y).abs() <= half.y + margin;
+  }
+
+  double _playerViewportRadius() {
+    final half = _visibleWorldHalf();
+    if (half == null) return cameraLookAheadRadius;
+    final fit = min(half.x, half.y) - cameraViewportMargin;
+    return min(cameraLookAheadRadius, max(8.0, fit));
+  }
+
+  void _clampPlayerToViewport() {
+    final cam = camara;
+    final half = _visibleWorldHalf();
+    if (cam == null || half == null || !player.isMounted) return;
+    final center = cam.viewfinder.position;
+    player.containInWorldRect(
+      minX: center.x - half.x + cameraViewportMargin,
+      maxX: center.x + half.x - cameraViewportMargin,
+      minY: center.y - half.y + cameraViewportMargin,
+      maxY: center.y + half.y - cameraViewportMargin,
+    );
+  }
+
+  void _clampViewfinderToPlayer(double radius) {
+    final vf = camara?.viewfinder;
+    if (vf == null || !player.isMounted) return;
+    final offset = player.position - vf.position;
+    final dist = offset.length;
+    if (dist <= radius) return;
+    _setViewfinderPosition(player.position - offset.normalized() * radius);
+  }
+
+  /// Look-ahead camera: start centered; lead the ship by [cameraLookAheadRadius]
+  /// in the last move direction. Hold = fast chase, swipe = slow chase.
+  /// Releasing thrust keeps the current frame (no recenter).
+  void _updateSpaceCamera(double dt) {
+    final cam = camara;
+    if (cam == null || !player.isMounted) return;
+
+    if (_knockbackCameraHoldRemaining > 0) {
+      _knockbackCameraHoldRemaining -= dt;
+      if (_knockbackCameraHoldRemaining < 0) {
+        _knockbackCameraHoldRemaining = 0;
+      }
+      _clampViewfinderToPlayer(_playerViewportRadius());
+      return;
+    }
+
+    final holding = hud.isLoaded && hud.effectiveMovementDelta.length2 > 0.0001;
+    if (holding) {
+      final inputDir = hud.effectiveMovementDelta.normalized();
+      if (_hasCameraIntent && inputDir.dot(_cameraIntentDir) < 0.25) {
+        _cameraChaseSpeed = 0;
+      }
+      _cameraIntentDir.setFrom(inputDir);
+      _hasCameraIntent = true;
+      _moveHoldTimer += dt;
+    } else {
+      _moveHoldTimer = 0;
+    }
+
+    if (!_hasCameraIntent) {
+      _setViewfinderPosition(player.position);
+      _cameraChaseSpeed = 0;
+      return;
+    }
+
+    final thrusting = holding && _moveHoldTimer >= cameraThrustHoldDelay;
+    final maxSpeed = thrusting ? cameraThrustSpeed : cameraFacingSpeed;
+    final radius = _playerViewportRadius();
+    final targetOffset = _cameraIntentDir * radius;
+    final offset = cam.viewfinder.position - player.position;
+    final delta = targetOffset - offset;
+    final dist = delta.length;
+    final snapDist = max(0.5, _cameraChaseSpeed * dt + 0.25);
+
+    if (dist <= snapDist) {
+      _setViewfinderPosition(player.position + targetOffset);
+      if (!holding) {
+        _cameraChaseSpeed = 0;
+      }
+      _clampViewfinderToPlayer(radius);
+      return;
+    }
+
+    _easeCameraChaseSpeed(maxSpeed, dt);
+    final step = min(_cameraChaseSpeed * dt, dist);
+    _setViewfinderPosition(
+      player.position + offset + delta.normalized() * step,
+    );
+    _clampViewfinderToPlayer(radius);
+  }
+
+  void _easeCameraChaseSpeed(double maxSpeed, double dt) {
+    final easeRate =
+        max(cameraThrustSpeed, cameraFacingSpeed) / cameraEaseInSeconds;
+    if (_cameraChaseSpeed < maxSpeed) {
+      final t = (_cameraChaseSpeed / maxSpeed).clamp(0.0, 1.0);
+      final easeIn = 0.12 + 0.88 * t;
+      _cameraChaseSpeed = min(
+        maxSpeed,
+        _cameraChaseSpeed + easeRate * easeIn * dt,
+      );
+    } else if (_cameraChaseSpeed > maxSpeed) {
+      _cameraChaseSpeed = max(maxSpeed, _cameraChaseSpeed - easeRate * dt);
+    }
+  }
+
+  void _clearKnockbackCameraAndFollow({bool snap = false}) {
+    snapViewfinderToPlayer();
   }
 
   void setSpikeCurveStrength(double value) {
@@ -133,6 +321,12 @@ class MyGame extends FlameGame
   void incrementShipsDestroyed() {
     shipsDestroyed++;
     scoreNotifier.value = shipsDestroyed;
+  }
+
+  void spawnEnemyExplosion(Vector2 worldPosition, Vector2 enemySize) {
+    final radius = max(enemySize.x, enemySize.y) * 2;
+    universo.add(SpaceExplosionEffect(center: worldPosition, radius: radius));
+    playSfx('explosion.mp3');
   }
 
   /// Power-ups: sube el máximo de vida de la run y actualiza al jugador.
@@ -187,6 +381,7 @@ class MyGame extends FlameGame
       minPlayers: 1,
       maxPlayers: 3,
     );
+    await _initSfx(['explosion.mp3', 'death1.mp3', 'menu1.mp3', 'alert3.mp3']);
     startBgmMusic();
 
     universo = World();
@@ -200,7 +395,7 @@ class MyGame extends FlameGame
     final layerNear = await ParallaxLayer.load(
       ParallaxImageData('estrellas950x450.png'),
       repeat: ImageRepeat.repeat,
-      velocityMultiplier: Vector2(2.2, 2.2),
+      velocityMultiplier: Vector2(1.2, 1.2),
     );
 
     final parallax = Parallax([
@@ -231,36 +426,11 @@ class MyGame extends FlameGame
     player.currentHitPoints = playerMaxHitPoints;
     universo.add(player);
 
-    mineroTorretas = RangedEnemy(
-      sprite: await Sprite.load('5.png'), //MINERO
-      position: Vector2(1300, 400),
-      size: Vector2(530, 300),
-      maxHitPoints: 20,
-      rotationSpeed: 0.4,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 40,
-    );
-
-    universo.add(mineroTorretas);
-
-    enemigo1 = RangedEnemy(
-      sprite: await Sprite.load('bite30x24.png'),
-      position: Vector2(850, 400),
-      size: Vector2(30, 24),
-      maxHitPoints: 10,
-      rotationSpeed: 3.0,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
-    );
-    universo.add(enemigo1);
-
     enemigo2 = RangedEnemy(
       sprite: await Sprite.load('verdePequeno.png'),
-      position: Vector2(440, 380),
+      position: Vector2(660, 380),
       size: Vector2(16, 16),
-      maxHitPoints: 10,
+      maxHitPoints: 200,
       rotationSpeed: 3.0,
       bulletSpeed: 50,
       shootingThreshold: 30,
@@ -268,122 +438,112 @@ class MyGame extends FlameGame
     );
     universo.add(enemigo2);
 
-    enemigo6 = RangedEnemy(
-      sprite: await Sprite.load('verdePequenoPink.png'), //
-      position: Vector2(200, 390),
-      size: Vector2(18, 16),
-      rotationSpeed: 4.0,
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
+    universo.add(
+      CrabEnemy(
+        sprite: await Sprite.load('10.png'),
+        position: Vector2(620, 350),
+        size: Vector2(20, 20),
+        maxHitPoints: 50,
+        rotationSpeed: 4.0,
+        damage: 30,
+      ),
     );
-    universo.add(enemigo6);
 
-    enemigo7 = RangedEnemy(
-      sprite: await Sprite.load('azulCanon.png'),
-      position: Vector2(100, 440),
-      size: Vector2(18, 16),
-      rotationSpeed: 4.0,
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
-    );
-    universo.add(enemigo7);
+    await _spawnEdgePatrolCrabs();
 
-    enemigo8 = RangedEnemy(
-      sprite: await Sprite.load('verdeMediano.png'),
-      position: Vector2(350, 270),
-      size: Vector2(30, 25),
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
+    final rangedSprite = await Sprite.load('verdePequeno.png');
+    universo.add(
+      RangedEnemy(
+        sprite: rangedSprite,
+        position: Vector2(620, 330),
+        size: Vector2(18, 18),
+        maxHitPoints: 40,
+        rotationSpeed: 3.0,
+        bulletSpeed: 50,
+        shootingThreshold: 30,
+        damage: 10,
+      ),
     );
-    universo.add(enemigo8);
-
-    enemigo4 = RangedEnemy(
-      sprite: await Sprite.load('7B.png'),
-      position: Vector2(750, 550),
-      maxHitPoints: 10,
-      bulletSpeed: 100,
-      shootingThreshold: 30,
-      damage: 10,
+    universo.add(
+      RangedEnemy(
+        sprite: rangedSprite,
+        position: Vector2(630, 385),
+        size: Vector2(18, 18),
+        maxHitPoints: 40,
+        rotationSpeed: 3.0,
+        bulletSpeed: 50,
+        shootingThreshold: 30,
+        damage: 10,
+      ),
     );
-    universo.add(enemigo4);
-
-    enemigo5 = RangedEnemy(
-      sprite: await Sprite.load('verdeGrande.png'),
-      position: Vector2(380, 450),
-      //size: Vector2(134, 199),
-    );
-    universo.add(enemigo5);
-
-    // Grupo de SpikeEnemy para pruebas (mismo sprite, distinta curva)
-    final spikeSprite = await Sprite.load('verdePequeno.png');
-    final spikeA = SpikeEnemy(
-      sprite: spikeSprite,
-      position: Vector2(560, 420),
-      size: Vector2(18, 16),
-      movementSpeed: 70,
-      rotationSpeed: 1.4,
-      damage: 40,
-      // Low curve preset.
-      curveStrength: 0.18,
-      chargeDuration: 2.0,
-      bullRushSpeed: 230,
-    );
-    final spikeB = SpikeEnemy(
-      sprite: spikeSprite,
-      position: Vector2(595, 430),
-      size: Vector2(18, 16),
-      movementSpeed: 70,
-      rotationSpeed: 1.4,
-      damage: 40,
-      // Medium curve preset.
-      curveStrength: 0.38,
-      chargeDuration: 2.0,
-      bullRushSpeed: 230,
-    );
-    final spikeC = SpikeEnemy(
-      sprite: spikeSprite,
-      position: Vector2(630, 420),
-      size: Vector2(18, 16),
-      movementSpeed: 70,
-      rotationSpeed: 1.4,
-      damage: 40,
-      // High curve preset.
-      curveStrength: 0.62,
-      chargeDuration: 2.0,
-      bullRushSpeed: 230,
-    );
-    universo.addAll([spikeA, spikeB, spikeC]);
 
     hud = GameHud()..priority = 100;
     scoreNotifier.value = shipsDestroyed;
+    camara?.viewport.add(OffscreenEnemyMarkers());
     camara?.viewport.add(hud);
-
-    informacionJuego = InformacionJuego();
-    informacionJuego.priority = 1000;
-    if (camara?.viewport != null) {
-      camara!.viewport.add(informacionJuego);
-      informacionJuego.position = Vector2(100, 300);
-    } //sin este if: la tabla se renderiza atras de los demas componentes
 
     currentPlayerPos = player.position.clone();
 
-    camara?.follow(player);
+    camara?.stop();
+    _setViewfinderPosition(player.position);
   }
 
-  // Método para mostrar/ocultar información
-  void toggleGameInfo() {
-    informacionJuego.toggleVisibility();
-  }
+  /// Four patrol crabs just outside each viewport edge (16 total) to test markers.
+  Future<void> _spawnEdgePatrolCrabs() async {
+    final sprite = await Sprite.load('10.png');
+    final origin = player.position;
+    final half =
+        _visibleWorldHalf() ??
+        Vector2(
+          logicalWidth / (2 * cameraZoom),
+          logicalHeight / (2 * cameraZoom),
+        );
+    const outside = 150.0;
+    const perSide = 4;
+    const patrol = 80.0;
 
-  // Método para actualizar información específica
-  void updateGameInfo() {
-    // Se actualiza automáticamente en el update del componente
+    List<double> spread(double from, double to, int n) {
+      if (n <= 1) return [(from + to) / 2];
+      return [for (var i = 0; i < n; i++) from + (to - from) * i / (n - 1)];
+    }
+
+    final alongY = spread(
+      origin.y - half.y * 0.7,
+      origin.y + half.y * 0.7,
+      perSide,
+    );
+    final alongX = spread(
+      origin.x - half.x * 0.7,
+      origin.x + half.x * 0.7,
+      perSide,
+    );
+    final leftX = origin.x - half.x - outside;
+    final rightX = origin.x + half.x + outside;
+    final topY = origin.y - half.y - outside;
+    final bottomY = origin.y + half.y + outside;
+
+    void addCrab(double x, double y) {
+      universo.add(
+        CrabEnemy(
+          sprite: sprite,
+          position: Vector2(x, y),
+          size: Vector2(20, 20),
+          maxHitPoints: 50,
+          rotationSpeed: 4.0,
+          damage: 30,
+          patrolRadius: patrol,
+        ),
+      );
+    }
+
+    for (final y in alongY) {
+      addCrab(leftX, y);
+      addCrab(rightX, y);
+    }
+    for (final x in alongX) {
+      addCrab(x, topY);
+      addCrab(x, bottomY);
+    }
   }
 
   @override
@@ -395,20 +555,15 @@ class MyGame extends FlameGame
   @override
   void update(double dt) {
     super.update(dt * timeScale);
+    _updateSpaceCamera(dt);
+    _clampPlayerToViewport();
 
     currentPlayerPos.setFrom(player.position);
 
-    final input = hud.effectiveMovementDelta;
-
-    if (input.length2 < 1e-10) {
-      // Si no hay input (joystick / WASD en web), desaceleramos suavemente
-      spaceParallax.parallax!.baseVelocity.scale(0.9);
-      return;
-    }
-
-    // Capas en sentido contrario al movimiento del jugador (scroll del cielo).
-    // Antes: `-input * 25` se veía como si las estrellas siguieran a la nave; usar `input * 25` invierte el scroll.
-    spaceParallax.parallax!.baseVelocity = input * 25;
+    final speed = player.currentSpeed.clamp(1.0, 10000.0);
+    spaceParallax.parallax!.baseVelocity.setFrom(
+      player.velocity * (25 / speed),
+    );
   }
 
   @override
@@ -419,11 +574,39 @@ class MyGame extends FlameGame
     hud.setWebMouseWorldTarget(worldTarget);
   }
 
+  void _beginWebCharge() {
+    if (!kIsWeb || paused || !player.isMounted || !hud.isLoaded) return;
+    hud.beginCharge();
+  }
+
+  void _endWebCharge() {
+    if (!kIsWeb || !hud.isLoaded) return;
+    hud.releaseCharge();
+  }
+
   @override
   void onPanDown(flame_events.DragDownInfo info) {
     super.onPanDown(info);
-    if (!kIsWeb || paused || !player.isMounted) return;
-    player.shoot();
+    _beginWebCharge();
+    if (!kIsWeb || camara == null || !hud.isLoaded) return;
+    hud.setWebMouseWorldTarget(
+      camara!.globalToLocal(info.eventPosition.widget),
+    );
+  }
+
+  @override
+  void onPanUpdate(flame_events.DragUpdateInfo info) {
+    super.onPanUpdate(info);
+    if (!kIsWeb || camara == null || !hud.isLoaded) return;
+    hud.setWebMouseWorldTarget(
+      camara!.globalToLocal(info.eventPosition.widget),
+    );
+  }
+
+  @override
+  void onPanEnd(flame_events.DragEndInfo info) {
+    super.onPanEnd(info);
+    _endWebCharge();
   }
 
   @override
@@ -437,6 +620,35 @@ class MyGame extends FlameGame
   void startBgmMusic() {
     FlameAudio.bgm.initialize();
     FlameAudio.bgm.play('bg_music.ogg');
+  }
+
+  void playShotSound(String file) {
+    if (file == 'fire_2.mp3') {
+      pool.start();
+      return;
+    }
+    playSfx(file);
+  }
+
+  Future<void> _initSfx(List<String> files) async {
+    unawaited(FlameAudio.audioCache.loadAll(files));
+  }
+
+  void playSfx(String file, {bool restart = true}) {
+    unawaited(_playSfx(file, restart: restart));
+  }
+
+  Future<void> _playSfx(String file, {bool restart = true}) async {
+    try {
+      final player = _sfxPlayers.putIfAbsent(file, () {
+        return AudioPlayer()..audioCache = FlameAudio.audioCache;
+      });
+      if (!restart && player.state == PlayerState.playing) return;
+      await player.stop();
+      await player.play(AssetSource(file), mode: PlayerMode.mediaPlayer);
+    } catch (e, st) {
+      debugPrint('SFX failed ($file): $e\n$st');
+    }
   }
 
   void pauseBgmMusic() {
@@ -568,7 +780,7 @@ class MyGame extends FlameGame
     if (camara != null) {
       cameraZoom = 0.5;
       camara!.viewfinder.zoom = cameraZoom;
-      camara!.follow(player);
+      _clearKnockbackCameraAndFollow(snap: true);
       //camara!.snapTo(player.position);
 
       print('✅ Cámara reseteada: zoom=0.5x, siguiendo jugador');
@@ -580,6 +792,7 @@ class MyGame extends FlameGame
     print('🖥️ Reseteando HUD...');
 
     if (hud != null) {
+      hud.cancelCharge();
       // Resetear joysticks (solo existen en la versión app)
       hud.movementJoystick?.knob?.position =
           hud.movementJoystick?.background?.position ?? Vector2.zero();
@@ -595,6 +808,10 @@ class MyGame extends FlameGame
 
   Future<void> recreatePlayer() async {
     print('👤 Recreando jugador...');
+
+    if (hud.isLoaded) {
+      hud.cancelCharge();
+    }
 
     // Detener cualquier enemigo que estuviera disparando al jugador anterior
     deactivateAllEnemies();
@@ -620,7 +837,7 @@ class MyGame extends FlameGame
 
     // 5. Actualizar referencias
     if (camara != null) {
-      camara!.follow(player);
+      _clearKnockbackCameraAndFollow(snap: true);
     }
 
     if (hud != null) {
