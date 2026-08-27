@@ -54,6 +54,7 @@ class MyGame extends FlameGame
   CameraComponent? camara;
   Vector2 currentPlayerPos = Vector2.zero();
   late AudioPool pool;
+  final Map<String, AudioPlayer> _sfxPlayers = {};
   double timeScale = 1.0; //game speed!
   double cameraZoom = 2;
   static const double knockbackCameraHoldSeconds = 2.0;
@@ -306,7 +307,7 @@ class MyGame extends FlameGame
     universo.add(
       SpaceExplosionEffect(center: worldPosition, radius: radius),
     );
-    unawaited(FlameAudio.play('explosion.mp3'));
+    playSfx('explosion.mp3');
   }
 
   /// Power-ups: sube el máximo de vida de la run y actualiza al jugador.
@@ -361,7 +362,12 @@ class MyGame extends FlameGame
       minPlayers: 1,
       maxPlayers: 3,
     );
-    unawaited(FlameAudio.audioCache.load('explosion.mp3'));
+    await _initSfx([
+      'explosion.mp3',
+      'death1.mp3',
+      'menu1.mp3',
+      'alert3.mp3',
+    ]);
     startBgmMusic();
 
     universo = World();
@@ -596,7 +602,31 @@ class MyGame extends FlameGame
       pool.start();
       return;
     }
-    unawaited(FlameAudio.play(file));
+    playSfx(file);
+  }
+
+  Future<void> _initSfx(List<String> files) async {
+    unawaited(FlameAudio.audioCache.loadAll(files));
+  }
+
+  void playSfx(String file, {bool restart = true}) {
+    unawaited(_playSfx(file, restart: restart));
+  }
+
+  Future<void> _playSfx(String file, {bool restart = true}) async {
+    try {
+      final player = _sfxPlayers.putIfAbsent(file, () {
+        return AudioPlayer()..audioCache = FlameAudio.audioCache;
+      });
+      if (!restart && player.state == PlayerState.playing) return;
+      await player.stop();
+      await player.play(
+        AssetSource(file),
+        mode: PlayerMode.mediaPlayer,
+      );
+    } catch (e, st) {
+      debugPrint('SFX failed ($file): $e\n$st');
+    }
   }
 
   void pauseBgmMusic() {

@@ -352,10 +352,15 @@ class GameHud extends PositionComponent
         ),
       ),
       onPressed: () {
+        game.playSfx('menu1.mp3');
         game.overlays.add("MainMenu");
-        //game.setTimeScale(0.0);
-        game.pauseEngine();
         game.pauseBgmMusic();
+        // Let the SFX start on this click before the Flame ticker stops.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (game.overlays.isActive('MainMenu')) {
+            game.pauseEngine();
+          }
+        });
       },
     );
     healthBar = HealthBar(

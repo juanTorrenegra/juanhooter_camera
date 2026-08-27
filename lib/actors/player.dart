@@ -202,6 +202,7 @@ class Player extends SpriteComponent with HasGameReference<MyGame> {
     game.clearEnemyBullets();
 
     _createExplosion();
+    game.playSfx('death1.mp3');
 
     print('🎮 Programando GameOverComponent en 1.5 segundos...');
 

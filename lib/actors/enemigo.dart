@@ -107,6 +107,7 @@ abstract class Enemigo extends SpriteComponent
     _isActivated = true;
     onActivate();
     _emitAlarmRipple();
+    game.playSfx('alert3.mp3', restart: false);
   }
 
   /// Splash that expands to [alarmRadius] and wakes others as it reaches them.
