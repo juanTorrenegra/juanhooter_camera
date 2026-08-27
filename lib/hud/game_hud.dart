@@ -352,7 +352,7 @@ class GameHud extends PositionComponent
         ),
       ),
       onPressed: () {
-        game.playSfx('menu1.mp3');
+        game.playSfx('menuOpen.mp3');
         game.overlays.add("MainMenu");
         game.pauseBgmMusic();
         // Let the SFX start on this click before the Flame ticker stops.

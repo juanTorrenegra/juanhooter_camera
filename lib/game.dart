@@ -326,7 +326,7 @@ class MyGame extends FlameGame
   void spawnEnemyExplosion(Vector2 worldPosition, Vector2 enemySize) {
     final radius = max(enemySize.x, enemySize.y) * 2;
     universo.add(SpaceExplosionEffect(center: worldPosition, radius: radius));
-    playSfx('explosion.mp3');
+    playSfx('menu1.mp3');
   }
 
   /// Power-ups: sube el máximo de vida de la run y actualiza al jugador.
@@ -381,7 +381,7 @@ class MyGame extends FlameGame
       minPlayers: 1,
       maxPlayers: 3,
     );
-    await _initSfx(['explosion.mp3', 'death1.mp3', 'menu1.mp3', 'alert3.mp3']);
+    await _initSfx(['menu1.mp3', 'death1.mp3', 'menuOpen.mp3', 'alert3.mp3']);
     startBgmMusic();
 
     universo = World();
