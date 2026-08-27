@@ -59,30 +59,35 @@ class MyGame extends FlameGame
   double cameraZoom = 2;
   static const double knockbackCameraHoldSeconds = 2.0;
 
-  /// Max look-ahead offset; actual cap is also the visible viewport inset.
-  static const double cameraOuterRadius = 100;
-
-  /// Rest deadzone: after idle, camera eases here and then stays (not centered).
-  static const double cameraInnerRadius = 25;
+  /// How far the viewfinder leads the ship (world units). Screen center sits
+  /// this far toward facing/thrust, so the ship sits the same distance opposite.
+  /// Tweak this if 50 feels too tight or too wide.
+  static const double cameraLookAheadRadius = 40;
 
   /// World-unit padding so the ship cannot reach the viewport edge.
   static const double cameraViewportMargin = 60;
 
-  /// Seconds to wait after thrust stops before easing back to [cameraInnerRadius].
-  static const double cameraIdleWaitSeconds = 2.0;
+  // --- Camera chase speeds (world units / sec). Tweak these. ---
+  // Player cruise is ~50. Thrust chase must be *faster* so look-ahead can form.
+  /// Holding a move direction (WASD / movement stick). Faster than the ship.
+  static const double cameraThrustSpeed = 80;
 
-  /// Extra viewfinder speed along travel so the camera slowly leads the ship.
-  static const double cameraLookAheadDrift = 4;
+  /// Quick swipe / not holding: slowly reframe toward the new facing.
+  static const double cameraFacingSpeed = 20;
 
-  /// Viewfinder speed when returning toward the inner deadzone.
-  static const double cameraReturnSpeed = 35;
+  /// Seconds to ease from 0 up to the current chase speed (spacey, not snappy).
+  static const double cameraEaseInSeconds = 0.85;
+
+  /// Move input shorter than this uses facing speed (a swipe, not a hold).
+  static const double cameraThrustHoldDelay = 0.14;
 
   /// World units per second for knockback slides (player and enemies).
   double knockbackSpeed = 80;
   double _knockbackCameraHoldRemaining = 0;
-  double _cameraIdleTimer = 0;
-  final Vector2 _cameraLookDir = Vector2.zero();
-  bool _hasCameraLookDir = false;
+  final Vector2 _cameraIntentDir = Vector2.zero();
+  bool _hasCameraIntent = false;
+  double _cameraChaseSpeed = 0;
+  double _moveHoldTimer = 0;
 
   late ParallaxComponent spaceParallax;
   double spikeCurveStrength = 0.35;
@@ -121,8 +126,10 @@ class MyGame extends FlameGame
 
   void snapViewfinderToPlayer() {
     _knockbackCameraHoldRemaining = 0;
-    _cameraIdleTimer = 0;
-    _hasCameraLookDir = false;
+    _hasCameraIntent = false;
+    _cameraChaseSpeed = 0;
+    _moveHoldTimer = 0;
+    _cameraIntentDir.setZero();
     camara?.stop();
     if (camara != null && player.isMounted) {
       _setViewfinderPosition(player.position);
@@ -161,9 +168,9 @@ class MyGame extends FlameGame
 
   double _playerViewportRadius() {
     final half = _visibleWorldHalf();
-    if (half == null) return cameraOuterRadius;
+    if (half == null) return cameraLookAheadRadius;
     final fit = min(half.x, half.y) - cameraViewportMargin;
-    return min(cameraOuterRadius, max(8.0, fit));
+    return min(cameraLookAheadRadius, max(8.0, fit));
   }
 
   void _clampPlayerToViewport() {
@@ -188,11 +195,12 @@ class MyGame extends FlameGame
     _setViewfinderPosition(player.position - offset.normalized() * radius);
   }
 
-  /// Spoon-in-a-glass camera: look ahead while thrusting, deadzone when idle.
+  /// Look-ahead camera: start centered; lead the ship by [cameraLookAheadRadius]
+  /// in the last move direction. Hold = fast chase, swipe = slow chase.
+  /// Releasing thrust keeps the current frame (no recenter).
   void _updateSpaceCamera(double dt) {
     final cam = camara;
     if (cam == null || !player.isMounted) return;
-    final vf = cam.viewfinder;
 
     if (_knockbackCameraHoldRemaining > 0) {
       _knockbackCameraHoldRemaining -= dt;
@@ -203,51 +211,64 @@ class MyGame extends FlameGame
       return;
     }
 
-    final thrusting =
-        hud.isLoaded && hud.effectiveMovementDelta.length2 > 0.0001;
-    if (thrusting) {
-      _cameraIdleTimer = 0;
+    final holding = hud.isLoaded && hud.effectiveMovementDelta.length2 > 0.0001;
+    if (holding) {
       final inputDir = hud.effectiveMovementDelta.normalized();
-      if (!_hasCameraLookDir) {
-        _cameraLookDir.setFrom(inputDir);
-        _hasCameraLookDir = true;
+      if (_hasCameraIntent && inputDir.dot(_cameraIntentDir) < 0.25) {
+        _cameraChaseSpeed = 0;
       }
+      _cameraIntentDir.setFrom(inputDir);
+      _hasCameraIntent = true;
+      _moveHoldTimer += dt;
+    } else {
+      _moveHoldTimer = 0;
+    }
 
-      final aligned = inputDir.dot(_cameraLookDir) >= 0;
-      if (aligned) {
-        _cameraLookDir
-          ..add(inputDir * 2.4 * dt)
-          ..normalize();
-        final along = max(0.0, player.velocity.dot(_cameraLookDir));
-        _translateViewfinder(
-          _cameraLookDir * (along + cameraLookAheadDrift) * dt,
-        );
+    if (!_hasCameraIntent) {
+      _setViewfinderPosition(player.position);
+      _cameraChaseSpeed = 0;
+      return;
+    }
+
+    final thrusting = holding && _moveHoldTimer >= cameraThrustHoldDelay;
+    final maxSpeed = thrusting ? cameraThrustSpeed : cameraFacingSpeed;
+    final radius = _playerViewportRadius();
+    final targetOffset = _cameraIntentDir * radius;
+    final offset = cam.viewfinder.position - player.position;
+    final delta = targetOffset - offset;
+    final dist = delta.length;
+    final snapDist = max(0.5, _cameraChaseSpeed * dt + 0.25);
+
+    if (dist <= snapDist) {
+      _setViewfinderPosition(player.position + targetOffset);
+      if (!holding) {
+        _cameraChaseSpeed = 0;
       }
-      final radius = _playerViewportRadius();
       _clampViewfinderToPlayer(radius);
-      if (!aligned) {
-        final dist = (player.position - vf.position).length;
-        if (dist >= radius - 0.5) {
-          _cameraLookDir.setFrom(inputDir);
-        }
-      }
       return;
     }
 
-    _cameraIdleTimer += dt;
-    if (_cameraIdleTimer < cameraIdleWaitSeconds) {
-      _clampViewfinderToPlayer(_playerViewportRadius());
-      return;
-    }
+    _easeCameraChaseSpeed(maxSpeed, dt);
+    final step = min(_cameraChaseSpeed * dt, dist);
+    _setViewfinderPosition(
+      player.position + offset + delta.normalized() * step,
+    );
+    _clampViewfinderToPlayer(radius);
+  }
 
-    final offset = player.position - vf.position;
-    final dist = offset.length;
-    if (dist > cameraInnerRadius) {
-      final extra = dist - cameraInnerRadius;
-      final step = min(cameraReturnSpeed * dt, extra);
-      _translateViewfinder(offset.normalized() * step);
+  void _easeCameraChaseSpeed(double maxSpeed, double dt) {
+    final easeRate =
+        max(cameraThrustSpeed, cameraFacingSpeed) / cameraEaseInSeconds;
+    if (_cameraChaseSpeed < maxSpeed) {
+      final t = (_cameraChaseSpeed / maxSpeed).clamp(0.0, 1.0);
+      final easeIn = 0.12 + 0.88 * t;
+      _cameraChaseSpeed = min(
+        maxSpeed,
+        _cameraChaseSpeed + easeRate * easeIn * dt,
+      );
+    } else if (_cameraChaseSpeed > maxSpeed) {
+      _cameraChaseSpeed = max(maxSpeed, _cameraChaseSpeed - easeRate * dt);
     }
-    _clampViewfinderToPlayer(_playerViewportRadius());
   }
 
   void _clearKnockbackCameraAndFollow({bool snap = false}) {
@@ -304,9 +325,7 @@ class MyGame extends FlameGame
 
   void spawnEnemyExplosion(Vector2 worldPosition, Vector2 enemySize) {
     final radius = max(enemySize.x, enemySize.y) * 2;
-    universo.add(
-      SpaceExplosionEffect(center: worldPosition, radius: radius),
-    );
+    universo.add(SpaceExplosionEffect(center: worldPosition, radius: radius));
     playSfx('explosion.mp3');
   }
 
@@ -362,12 +381,7 @@ class MyGame extends FlameGame
       minPlayers: 1,
       maxPlayers: 3,
     );
-    await _initSfx([
-      'explosion.mp3',
-      'death1.mp3',
-      'menu1.mp3',
-      'alert3.mp3',
-    ]);
+    await _initSfx(['explosion.mp3', 'death1.mp3', 'menu1.mp3', 'alert3.mp3']);
     startBgmMusic();
 
     universo = World();
@@ -480,7 +494,10 @@ class MyGame extends FlameGame
     final origin = player.position;
     final half =
         _visibleWorldHalf() ??
-        Vector2(logicalWidth / (2 * cameraZoom), logicalHeight / (2 * cameraZoom));
+        Vector2(
+          logicalWidth / (2 * cameraZoom),
+          logicalHeight / (2 * cameraZoom),
+        );
     const outside = 150.0;
     const perSide = 4;
     const patrol = 80.0;
@@ -490,8 +507,16 @@ class MyGame extends FlameGame
       return [for (var i = 0; i < n; i++) from + (to - from) * i / (n - 1)];
     }
 
-    final alongY = spread(origin.y - half.y * 0.7, origin.y + half.y * 0.7, perSide);
-    final alongX = spread(origin.x - half.x * 0.7, origin.x + half.x * 0.7, perSide);
+    final alongY = spread(
+      origin.y - half.y * 0.7,
+      origin.y + half.y * 0.7,
+      perSide,
+    );
+    final alongX = spread(
+      origin.x - half.x * 0.7,
+      origin.x + half.x * 0.7,
+      perSide,
+    );
     final leftX = origin.x - half.x - outside;
     final rightX = origin.x + half.x + outside;
     final topY = origin.y - half.y - outside;
@@ -620,10 +645,7 @@ class MyGame extends FlameGame
       });
       if (!restart && player.state == PlayerState.playing) return;
       await player.stop();
-      await player.play(
-        AssetSource(file),
-        mode: PlayerMode.mediaPlayer,
-      );
+      await player.play(AssetSource(file), mode: PlayerMode.mediaPlayer);
     } catch (e, st) {
       debugPrint('SFX failed ($file): $e\n$st');
     }
