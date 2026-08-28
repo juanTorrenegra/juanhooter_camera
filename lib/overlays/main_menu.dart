@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/flame.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/game.dart';
 
@@ -16,6 +17,15 @@ class VisorOverlay extends StatefulWidget {
 
 class _VisorOverlayState extends State<VisorOverlay> {
   MyGame get game => widget.game;
+
+  /// Gap to the right of the elevated buttons. Raise to push modes farther right.
+  static const double stickModeOffsetX = 55;
+
+  /// Down from the top of Jugar. Raise to drop the stack, lower to raise it.
+  static const double stickModeOffsetY = 20;
+
+  /// Font size for the 1/2 joystick mode labels.
+  static const double stickModeFontSize = 25;
 
   @override
   void dispose() {
@@ -76,92 +86,154 @@ class _VisorOverlayState extends State<VisorOverlay> {
                     ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    game.overlays.remove('MainMenu');
-                    game.overlays.add("HudDecoration");
-                    game.overlays.add("ScoreBoard");
-                    //game.setTimeScale(1.0);
-                    game.resumeEngine();
-                    game.resumeBgmMusic();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withValues(alpha: .2),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 80,
-                      vertical: 7,
-                    ),
-                    elevation: 8,
-                    shadowColor: Colors.black,
-                  ),
-                  child: const Text(
-                    'Jugar',
-                    style: TextStyle(
-                      fontFamily: "Megatrans",
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 5,
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: () {
-                    Flame.device.setLandscapeRightOnly();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withValues(alpha: .2),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 25,
-                      vertical: 7,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(child: SizedBox()),
+                    Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            game.overlays.remove('MainMenu');
+                            game.overlays.add("HudDecoration");
+                            game.overlays.add("ScoreBoard");
+                            //game.setTimeScale(1.0);
+                            game.resumeEngine();
+                            game.resumeBgmMusic();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.withValues(alpha: .2),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 80,
+                              vertical: 7,
+                            ),
+                            elevation: 8,
+                            shadowColor: Colors.black,
+                          ),
+                          child: const Text(
+                            'Jugar',
+                            style: TextStyle(
+                              fontFamily: "Megatrans",
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: () {
+                            Flame.device.setLandscapeRightOnly();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.withValues(alpha: .2),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 7,
+                            ),
+                            elevation: 8,
+                            shadowColor: Colors.black,
+                          ),
+                          child: const Text(
+                            'Configuracion',
+                            style: TextStyle(
+                              fontFamily: "Megatrans",
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: () {
+                            Flame.device.setLandscapeLeftOnly();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.withValues(alpha: .2),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 60,
+                              vertical: 7,
+                            ),
+                            elevation: 8,
+                            shadowColor: Colors.black,
+                          ),
+                          child: const Text(
+                            'creditos',
+                            style: TextStyle(
+                              fontFamily: "Megatrans",
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-
-                    elevation: 8,
-                    shadowColor: Colors.black,
-                  ),
-
-                  child: const Text(
-                    'Configuracion',
-                    style: TextStyle(
-                      fontFamily: "Megatrans",
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 5,
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: kIsWeb
+                            ? const SizedBox.shrink()
+                            : Padding(
+                                padding: const EdgeInsets.only(
+                                  left: stickModeOffsetX,
+                                  top: stickModeOffsetY,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _stickModeOption(
+                                      '1 joystick mode',
+                                      AppStickMode.single,
+                                    ),
+                                    const SizedBox(height: 18),
+                                    _stickModeOption(
+                                      '2 joystick mode',
+                                      AppStickMode.dual,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: () {
-                    Flame.device.setLandscapeLeftOnly();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.withValues(alpha: .2),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 60,
-                      vertical: 7,
-                    ),
-
-                    elevation: 8,
-                    shadowColor: Colors.black,
-                  ),
-                  child: const Text(
-                    'creditos',
-                    style: TextStyle(
-                      fontFamily: "Megatrans",
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 5,
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _stickModeOption(String label, AppStickMode mode) {
+    final selected = game.stickMode == mode;
+    return GestureDetector(
+      onTap: () {
+        game.setStickMode(mode);
+        setState(() {});
+      },
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Megatrans',
+          fontSize: stickModeFontSize,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 3,
+          color: selected ? Colors.cyan : Colors.white38,
+          shadows: selected
+              ? const [
+                  Shadow(color: Colors.white, blurRadius: 8),
+                  Shadow(color: Colors.white, blurRadius: 16),
+                  Shadow(color: Colors.white70, blurRadius: 28),
+                ]
+              : null,
+        ),
       ),
     );
   }

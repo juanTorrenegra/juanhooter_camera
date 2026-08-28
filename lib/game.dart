@@ -25,6 +25,8 @@ import 'package:juanshooter/effects/explosion_particles.dart';
 
 //prototipo
 
+enum AppStickMode { single, dual }
+
 class MyGame extends FlameGame
     with
         HasGameReference<MyGame>,
@@ -90,6 +92,7 @@ class MyGame extends FlameGame
   double _moveHoldTimer = 0;
 
   late ParallaxComponent spaceParallax;
+  AppStickMode stickMode = AppStickMode.single;
   double spikeCurveStrength = 0.35;
   double spikeChargeSpeed = 70;
   double spikeBullRushSpeed = 230;
@@ -98,6 +101,16 @@ class MyGame extends FlameGame
   double spikeMinRushDistance = 220.0;
 
   // Método para cambiar la escala de tiempo
+  void setStickMode(AppStickMode mode) {
+    if (kIsWeb) return;
+    stickMode = mode;
+    final viewport = camara?.viewport;
+    if (viewport == null) return;
+    for (final child in viewport.children.whereType<GameHud>()) {
+      if (child.isLoaded) child.applyStickMode();
+    }
+  }
+
   void setTimeScale(double scale) {
     timeScale = scale.clamp(0.1, 5.0); // Limitar entre 0.1x y 5.0x
     print('Time scale set to: ${timeScale}x');

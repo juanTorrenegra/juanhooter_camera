@@ -175,6 +175,8 @@ class GameHud extends PositionComponent
   late final InformacionJuego informacionJuego;
   late final PotencyBar potencyBar;
 
+  bool get _isSingleStick => !kIsWeb && game.stickMode == AppStickMode.single;
+
   /// Web (WASD): dirección normalizada; en otras plataformas permanece en cero.
   final Vector2 _keyboardMovement = Vector2.zero();
   final Vector2 _webMouseLookDelta = Vector2.zero();
@@ -183,7 +185,7 @@ class GameHud extends PositionComponent
   bool _spaceWasDown = false;
   bool _chargeHeld = false;
 
-  /// Movimiento: WASD en web; joysticks en app.
+  /// Movimiento: WASD en web; left stick (or the one stick) in app.
   Vector2 get effectiveMovementDelta {
     if (kIsWeb) {
       if (_keyboardMovement.length2 > 0.0001) {
@@ -192,13 +194,15 @@ class GameHud extends PositionComponent
       return Vector2.zero();
     }
     final joystick = movementJoystick;
-    if (joystick != null && joystick.direction != JoystickDirection.idle) {
+    if (joystick != null &&
+        joystick.isMounted &&
+        joystick.direction != JoystickDirection.idle) {
       return joystick.relativeDelta;
     }
     return Vector2.zero();
   }
 
-  /// Rotación: mouse en web; look joystick en app.
+  /// Rotación: mouse en web; look stick in 2-stick app; same stick in 1-stick.
   Vector2 get effectiveLookDelta {
     if (kIsWeb) {
       if (_hasWebMouseLookDelta && _webMouseLookDelta.length2 > 0.0001) {
@@ -206,8 +210,13 @@ class GameHud extends PositionComponent
       }
       return Vector2.zero();
     }
+    if (_isSingleStick) {
+      return effectiveMovementDelta;
+    }
     final joystick = lookJoystick;
-    if (joystick != null && joystick.direction != JoystickDirection.idle) {
+    if (joystick != null &&
+        joystick.isMounted &&
+        joystick.direction != JoystickDirection.idle) {
       return joystick.relativeDelta;
     }
     return Vector2.zero();
@@ -299,7 +308,7 @@ class GameHud extends PositionComponent
           paint: Paint()
             ..color = Colors.cyan.withAlpha(150)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.3,
+            ..strokeWidth = 0.4,
         ),
         background: CircleComponent(
           radius: 80,
@@ -326,13 +335,13 @@ class GameHud extends PositionComponent
         ),
       );
       shootButton = HudButtonComponent(
-        button: SkewedShootPad(
-          fillColor: Colors.cyan.withAlpha(50),
-          strokeColor: Colors.cyan.withAlpha(180),
+        button: AimShootPad(
+          fillColor: Colors.cyan.withAlpha(25),
+          strokeColor: Colors.cyan.withAlpha(90),
         ),
-        buttonDown: SkewedShootPad(
-          fillColor: Colors.cyan.withAlpha(140),
-          strokeColor: Colors.cyanAccent,
+        buttonDown: AimShootPad(
+          fillColor: Colors.cyan.withAlpha(70),
+          strokeColor: Colors.cyanAccent.withAlpha(128),
         ),
         onPressed: beginCharge,
         onReleased: releaseCharge,
@@ -397,6 +406,23 @@ class GameHud extends PositionComponent
     add(informacionJuego);
     add(potencyBar);
 
+    applyStickMode();
+    _positionComponents();
+  }
+
+  void applyStickMode() {
+    if (kIsWeb) return;
+    final move = movementJoystick;
+    final look = lookJoystick;
+    if (move == null || look == null) return;
+
+    if (game.stickMode == AppStickMode.single) {
+      if (look.isMounted) look.removeFromParent();
+      if (!move.isMounted) add(move);
+    } else {
+      if (!move.isMounted) add(move);
+      if (!look.isMounted) add(look);
+    }
     _positionComponents();
   }
 
@@ -426,9 +452,19 @@ class GameHud extends PositionComponent
     position = Vector2.zero();
 
     final joystickY = viewSize.y * 3 / 4;
-    movementJoystick?.position = Vector2(viewSize.x * 1 / 8, joystickY);
-    lookJoystick?.position = Vector2(viewSize.x * 7 / 8, joystickY);
-    shootButton?.position = Vector2(viewSize.x - 350, 40);
+    final leftStickPos = Vector2(viewSize.x * 1 / 8, joystickY);
+    final rightStickPos = Vector2(viewSize.x * 7 / 8, joystickY);
+    movementJoystick?.position = leftStickPos;
+    lookJoystick?.position = rightStickPos;
+    final shoot = shootButton;
+    if (shoot != null) {
+      shoot.anchor = Anchor.center;
+      if (_isSingleStick) {
+        shoot.position = rightStickPos;
+      } else {
+        shoot.position = Vector2(viewSize.x - 120, 100);
+      }
+    }
     menu.position = Vector2(viewSize.x / 2 - 15, viewSize.y - 60);
     healthBar.position = Vector2(200, 80);
     debugMenuButton.position = Vector2(10, 40);
@@ -437,35 +473,62 @@ class GameHud extends PositionComponent
   }
 }
 
-/// Opposite skew of [InformacionJuego] (`-0.14`).
-class SkewedShootPad extends PositionComponent {
-  static const double skewX = 0.30;
+/// Circular scope / aim pad used as the fire button.
+class AimShootPad extends PositionComponent {
+  static const double radius = 80;
 
   final Color fillColor;
   final Color strokeColor;
 
-  SkewedShootPad({
-    required this.fillColor,
-    required this.strokeColor,
-    Vector2? size,
-  }) : super(size: size ?? Vector2(250, 80));
+  AimShootPad({required this.fillColor, required this.strokeColor})
+    : super(size: Vector2.all(radius * 2));
 
   @override
   void render(Canvas canvas) {
-    canvas.save();
-    canvas.transform(vm.Matrix4.skewX(skewX).storage);
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      const Radius.circular(10),
+    final center = Offset(size.x / 2, size.y / 2);
+    canvas.drawCircle(center, radius, Paint()..color = fillColor);
+
+    final ring = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    ring.strokeWidth = 1.0;
+    canvas.drawCircle(center, radius - 1, ring);
+    ring.strokeWidth = 0.65;
+    canvas.drawCircle(center, radius * 0.62, ring);
+    ring.strokeWidth = 0.6;
+    canvas.drawCircle(center, radius * 0.24, ring);
+
+    ring.strokeWidth = 0.7;
+    const arm = 16.0;
+    canvas.drawLine(
+      Offset(center.dx - arm, center.dy),
+      Offset(center.dx + arm, center.dy),
+      ring,
     );
-    canvas.drawRRect(rrect, Paint()..color = fillColor);
-    canvas.drawRRect(
-      rrect,
-      Paint()
-        ..color = strokeColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+    canvas.drawLine(
+      Offset(center.dx, center.dy - arm),
+      Offset(center.dx, center.dy + arm),
+      ring,
     );
-    canvas.restore();
+
+    ring.strokeWidth = 0.6;
+    for (var i = 0; i < 12; i++) {
+      final a = i * math.pi / 6;
+      final inner = radius - 12;
+      final outer = radius - 2;
+      canvas.drawLine(
+        Offset(
+          center.dx + inner * math.cos(a),
+          center.dy + inner * math.sin(a),
+        ),
+        Offset(
+          center.dx + outer * math.cos(a),
+          center.dy + outer * math.sin(a),
+        ),
+        ring,
+      );
+    }
   }
 }
