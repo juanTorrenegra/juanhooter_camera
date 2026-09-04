@@ -5,17 +5,19 @@ import 'package:flame/flame.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/game.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:juanshooter/core/di/providers.dart';
 
-class VisorOverlay extends StatefulWidget {
+class VisorOverlay extends ConsumerStatefulWidget {
   const VisorOverlay({required this.game, super.key});
 
   final MyGame game;
 
   @override
-  State<VisorOverlay> createState() => _VisorOverlayState();
+  ConsumerState<VisorOverlay> createState() => _VisorOverlayState();
 }
 
-class _VisorOverlayState extends State<VisorOverlay> {
+class _VisorOverlayState extends ConsumerState<VisorOverlay> {
   MyGame get game => widget.game;
 
   /// Gap to the right of the elevated buttons. Raise to push modes farther right.
@@ -86,7 +88,29 @@ class _VisorOverlayState extends State<VisorOverlay> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 80),
+                  child: ref.watch(gameFlagsProvider).when(
+                    data: (flags) => Text(
+                      flags.transmissionTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: flags.fromRemote
+                            ? Colors.cyanAccent.withValues(alpha: 0.75)
+                            : Colors.orangeAccent.withValues(alpha: 0.85),
+                        fontFamily: 'Megatrans',
+                        fontSize: 14,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                    loading: () => const SizedBox(height: 18),
+                    error: (_, __) => const SizedBox(height: 18),
+                  ),
+                ),
+                const SizedBox(height: 18),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -122,7 +146,32 @@ class _VisorOverlayState extends State<VisorOverlay> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 18),
+                        ElevatedButton(
+                          onPressed: () {
+                            game.overlays.add('Leaderboard');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.withValues(alpha: .2),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 58,
+                              vertical: 7,
+                            ),
+                            elevation: 8,
+                            shadowColor: Colors.black,
+                          ),
+                          child: const Text(
+                            'Ranking',
+                            style: TextStyle(
+                              fontFamily: "Megatrans",
+                              fontSize: 25,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
                         ElevatedButton(
                           onPressed: () {
                             Flame.device.setLandscapeRightOnly();
@@ -147,7 +196,7 @@ class _VisorOverlayState extends State<VisorOverlay> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 18),
                         ElevatedButton(
                           onPressed: () {
                             Flame.device.setLandscapeLeftOnly();

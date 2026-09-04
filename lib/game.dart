@@ -20,6 +20,7 @@ import 'package:juanshooter/overlays/game_over.dart';
 import 'package:juanshooter/weapons/bullet.dart';
 import 'package:juanshooter/weapons/enemy_bullet.dart';
 import 'package:juanshooter/effects/explosion_particles.dart';
+
 // Logical game frame = 1280×720 (16:9). See MyGame.logicalWidth / logicalHeight
 // juego: nave que elimina asteroides para encontrar armas para derrotar monstruos del espacio, escenario: dentro de un imperio y uno es un minero: mision: minar y mejorar la nave para poder acceder a MediumWorld y HardWorld, competir contra otros mineros compitiendo y compartiendo loot.
 
@@ -33,7 +34,10 @@ class MyGame extends FlameGame
         HasCollisionDetection,
         flame_events.MouseMovementDetector,
         flame_events.PanDetector {
-  MyGame();
+  MyGame({this.onRunEnded});
+
+  /// Called once when a run ends so the app layer can POST the score.
+  final void Function(int score)? onRunEnded;
 
   /// Fixed design resolution (16:9). The Flutter shell letterboxes this frame;
   /// resizing the browser scales it instead of showing more of the world
@@ -702,6 +706,9 @@ class MyGame extends FlameGame
     if (overlays.isActive('GameOver')) {
       overlays.remove('GameOver');
       print('✅ Overlay GameOver removido');
+    }
+    if (overlays.isActive('ScoreTransmit')) {
+      overlays.remove('ScoreTransmit');
     }
   }
 

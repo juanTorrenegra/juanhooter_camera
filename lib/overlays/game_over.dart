@@ -47,6 +47,8 @@ class GameOverComponent extends PositionComponent
 
     await _createUI();
     _animateAppearance();
+    game.onRunEnded?.call(game.shipsDestroyed);
+    game.overlays.add('ScoreTransmit');
     print('GameOverComponent cargado y visible');
   }
 
@@ -102,6 +104,7 @@ class GameOverComponent extends PositionComponent
       letterSpacing: _letterSpacing,
       fontSize: 18,
       onPressed: () {
+        game.overlays.remove('ScoreTransmit');
         removeFromParent();
         game.overlays.add('MainMenu');
         _restartGame();
@@ -124,6 +127,7 @@ class GameOverComponent extends PositionComponent
   Future<void> _restartGame() async {
     print('Iniciando nuevo juego...');
 
+    game.overlays.remove('ScoreTransmit');
     removeFromParent();
     game.clearAllGameEntities();
     game.deactivateAllEnemies();
