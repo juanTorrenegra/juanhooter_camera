@@ -36,7 +36,7 @@ class MyGame extends FlameGame
         flame_events.PanDetector {
   MyGame({this.onRunEnded});
 
-  /// Called once when a run ends so the app layer can POST the score......
+  /// Called once when a run ends so the app layer can POST the score.
   final void Function(int score)? onRunEnded;
 
   /// Fixed design resolution (16:9). The Flutter shell letterboxes this frame;
