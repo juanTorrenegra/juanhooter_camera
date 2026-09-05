@@ -36,22 +36,22 @@ class _MainMenuButtonsState extends ConsumerState<MainMenuButtons> {
   MyGame get game => widget.game;
 
   List<_MenuAction> get _actions => [
-        _MenuAction(label: 'Jugar', onPressed: _play),
-        _MenuAction(
-          label: 'Ranking',
-          onPressed: () => game.overlays.add('Leaderboard'),
-        ),
-        _MenuAction(
-          label: 'Configuracion',
-          onPressed: () => Flame.device.setLandscapeRightOnly(),
-        ),
-        _MenuAction(label: 'Salir', onPressed: _exitApp),
-        _MenuAction(
-          label: 'creditos',
-          onPressed: () => Flame.device.setLandscapeLeftOnly(),
-        ),
-        _MenuAction(label: 'Cerrar sesion', onPressed: _signOut),
-      ];
+    _MenuAction(label: 'Jugar', onPressed: _play),
+    _MenuAction(
+      label: 'Ranking',
+      onPressed: () => game.overlays.add('Leaderboard'),
+    ),
+    _MenuAction(
+      label: 'Configuracion',
+      onPressed: () => Flame.device.setLandscapeRightOnly(),
+    ),
+    _MenuAction(label: 'Salir', onPressed: _exitApp),
+    _MenuAction(
+      label: 'creditos',
+      onPressed: () => Flame.device.setLandscapeLeftOnly(),
+    ),
+    _MenuAction(label: 'Cerrar sesion', onPressed: _signOut),
+  ];
 
   @override
   void initState() {
@@ -126,7 +126,8 @@ class _MainMenuButtonsState extends ConsumerState<MainMenuButtons> {
               animation: _controller,
               builder: (context, child) {
                 final distance = (index - _centerIndex()).abs();
-                final fade = (1.0 - distance / 2.0).clamp(0.0, 1.0);
+                // Five slots stay visible: center=1, neighbors~0.6, outer pair~0.2
+                final fade = (1.0 - distance * 0.4).clamp(0.0, 1.0);
                 final selected = distance < 0.5;
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -173,9 +174,9 @@ class _MenuCarouselLabel extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Megatrans',
-              fontSize: 36,
+              fontSize: 42,
               fontWeight: FontWeight.bold,
-              letterSpacing: 5,
+              letterSpacing: 10,
               color: selected ? Colors.cyanAccent : Colors.white54,
               shadows: selected ? _whiteGlow : null,
             ),
@@ -202,7 +203,10 @@ class _HudSnapPhysics extends ScrollPhysics {
 
   @override
   _HudSnapPhysics applyTo(ScrollPhysics? ancestor) {
-    return _HudSnapPhysics(itemExtent: itemExtent, parent: buildParent(ancestor));
+    return _HudSnapPhysics(
+      itemExtent: itemExtent,
+      parent: buildParent(ancestor),
+    );
   }
 
   @override
@@ -255,11 +259,11 @@ class _HudSnapPhysics extends ScrollPhysics {
 class _HudScrollBehavior extends ScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+  };
 
   @override
   Widget buildOverscrollIndicator(
