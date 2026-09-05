@@ -2,6 +2,7 @@ import 'package:flame/flame.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:juanshooter/core/di/providers.dart';
@@ -26,40 +27,37 @@ class _MenuAction {
 class _MainMenuButtonsState extends ConsumerState<MainMenuButtons> {
   static const double _width = 560;
   static const double _height = 360;
+  static const int _visibleCount = 5;
   static const int _loopOffset = 1000;
-  static const List<int> _flexWeights = [1, 1, 2, 1, 1];
-  static const int _centerSlot = 2;
+  static const double _itemExtent = _height / _visibleCount;
 
-  late final CarouselController _controller;
-  int _centerIndex = 0;
+  late final ScrollController _controller;
 
   MyGame get game => widget.game;
 
   List<_MenuAction> get _actions => [
-    _MenuAction(label: 'Jugar', onPressed: _play),
-    _MenuAction(
-      label: 'Ranking',
-      onPressed: () => game.overlays.add('Leaderboard'),
-    ),
-    _MenuAction(
-      label: 'Configuracion',
-      onPressed: () => Flame.device.setLandscapeRightOnly(),
-    ),
-    _MenuAction(
-      label: 'creditos',
-      onPressed: () => Flame.device.setLandscapeLeftOnly(),
-    ),
-    _MenuAction(label: 'Cerrar sesion', onPressed: _signOut),
-    _MenuAction(label: 'Salir', onPressed: _exitApp),
-  ];
+        _MenuAction(label: 'Jugar', onPressed: _play),
+        _MenuAction(
+          label: 'Ranking',
+          onPressed: () => game.overlays.add('Leaderboard'),
+        ),
+        _MenuAction(
+          label: 'Configuracion',
+          onPressed: () => Flame.device.setLandscapeRightOnly(),
+        ),
+        _MenuAction(label: 'Salir', onPressed: _exitApp),
+        _MenuAction(
+          label: 'creditos',
+          onPressed: () => Flame.device.setLandscapeLeftOnly(),
+        ),
+        _MenuAction(label: 'Cerrar sesion', onPressed: _signOut),
+      ];
 
   @override
   void initState() {
     super.initState();
-    // Start far into the infinite list so Jugar sits in the large center slot
-    // (weights [1, 3, 1]) and scrolling can wrap in both directions.
-    _controller = CarouselController(
-      initialItem: _loopOffset * _actions.length,
+    _controller = ScrollController(
+      initialScrollOffset: _loopOffset * _actions.length * _itemExtent,
     );
   }
 
@@ -98,50 +96,52 @@ class _MainMenuButtonsState extends ConsumerState<MainMenuButtons> {
     SystemNavigator.pop();
   }
 
+  double _centerIndex() {
+    if (!_controller.hasClients) {
+      return (_loopOffset * _actions.length).toDouble();
+    }
+    return _controller.offset / _itemExtent;
+  }
+
   @override
   Widget build(BuildContext context) {
     final actions = _actions;
+    final loopCount = actions.length * _loopOffset * 2;
+    final endPad = (_height - _itemExtent) / 2;
+
     return SizedBox(
       width: _width,
       height: _height,
       child: ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(
-          dragDevices: {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.mouse,
-            PointerDeviceKind.stylus,
-            PointerDeviceKind.trackpad,
-          },
-        ),
-        child: CarouselView.weighted(
+        behavior: _HudScrollBehavior(),
+        child: ListView.builder(
           controller: _controller,
-          scrollDirection: Axis.vertical,
-          flexWeights: _flexWeights,
-          consumeMaxWeight: false,
-          itemSnapping: true,
-          infinite: true,
-          enableSplash: false,
-          itemClipBehavior: Clip.none,
-          padding: EdgeInsets.zero,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          shape: const Border(),
-          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-          onIndexChanged: (leading) {
-            final length = actions.length;
-            setState(() {
-              _centerIndex = (leading + _centerSlot) % length;
-              if (_centerIndex < 0) _centerIndex += length;
-            });
+          itemExtent: _itemExtent,
+          padding: EdgeInsets.symmetric(vertical: endPad),
+          physics: const _HudSnapPhysics(itemExtent: _itemExtent),
+          itemCount: loopCount,
+          itemBuilder: (context, index) {
+            final action = actions[index % actions.length];
+            return AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                final distance = (index - _centerIndex()).abs();
+                final fade = (1.0 - distance / 2.0).clamp(0.0, 1.0);
+                final selected = distance < 0.5;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: action.onPressed,
+                  child: Opacity(
+                    opacity: fade,
+                    child: _MenuCarouselLabel(
+                      label: action.label,
+                      selected: selected,
+                    ),
+                  ),
+                );
+              },
+            );
           },
-          onTap: (index) => actions[index % actions.length].onPressed(),
-          children: [
-            for (var i = 0; i < actions.length; i++)
-              _MenuCarouselLabel(
-                label: actions[i].label,
-                selected: i == _centerIndex,
-              ),
-          ],
         ),
       ),
     );
@@ -183,5 +183,95 @@ class _MenuCarouselLabel extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// One-slot snap, overdamped spring, no ballistic coast.
+class _HudSnapPhysics extends ScrollPhysics {
+  const _HudSnapPhysics({required this.itemExtent, super.parent});
+
+  final double itemExtent;
+
+  static const SpringDescription _spring = SpringDescription(
+    mass: 1,
+    stiffness: 2200,
+    damping: 280,
+  );
+
+  static const double _flingVelocity = 180;
+
+  @override
+  _HudSnapPhysics applyTo(ScrollPhysics? ancestor) {
+    return _HudSnapPhysics(itemExtent: itemExtent, parent: buildParent(ancestor));
+  }
+
+  @override
+  SpringDescription get spring => _spring;
+
+  @override
+  double get minFlingVelocity => _flingVelocity;
+
+  @override
+  double get maxFlingVelocity => 600;
+
+  double _targetPixels(ScrollMetrics position, double velocity) {
+    final page = position.pixels / itemExtent;
+    final double targetPage;
+    if (velocity.abs() < _flingVelocity) {
+      targetPage = page.roundToDouble();
+    } else if (velocity > 0) {
+      targetPage = page.floor() + 1;
+    } else {
+      targetPage = page.ceil() - 1;
+    }
+    return (targetPage * itemExtent).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+  }
+
+  @override
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
+    final target = _targetPixels(position, velocity);
+    if ((target - position.pixels).abs() < tolerance.distance) {
+      return null;
+    }
+    return ScrollSpringSimulation(
+      _spring,
+      position.pixels,
+      target,
+      0,
+      tolerance: tolerance,
+    );
+  }
+
+  @override
+  bool get allowImplicitScrolling => false;
+}
+
+class _HudScrollBehavior extends ScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const ClampingScrollPhysics();
   }
 }

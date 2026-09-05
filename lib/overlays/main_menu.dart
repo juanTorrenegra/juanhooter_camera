@@ -91,34 +91,34 @@ class _VisorOverlayState extends ConsumerState<VisorOverlay> {
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 80),
-                  child: ref.watch(gameFlagsProvider).when(
-                    data: (flags) => Text(
-                      flags.transmissionTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: flags.fromRemote
-                            ? Colors.cyanAccent.withValues(alpha: 0.75)
-                            : Colors.orangeAccent.withValues(alpha: 0.85),
-                        fontFamily: 'Megatrans',
-                        fontSize: 14,
-                        letterSpacing: 3,
+                  child: ref
+                      .watch(gameFlagsProvider)
+                      .when(
+                        data: (flags) => Text(
+                          flags.transmissionTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: flags.fromRemote
+                                ? Colors.cyanAccent.withValues(alpha: 0.75)
+                                : Colors.orangeAccent.withValues(alpha: 0.85),
+                            fontFamily: 'Megatrans',
+                            fontSize: 14,
+                            letterSpacing: 3,
+                          ),
+                        ),
+                        loading: () => const SizedBox(height: 18),
+                        error: (_, __) => const SizedBox(height: 18),
                       ),
-                    ),
-                    loading: () => const SizedBox(height: 18),
-                    error: (_, __) => const SizedBox(height: 18),
-                  ),
                 ),
                 const SizedBox(height: 18),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(child: SizedBox()),
-                    MainMenuButtons(game: game),
                     Expanded(
                       child: Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: Alignment.center,
                         child: kIsWeb
                             ? const SizedBox.shrink()
                             : Padding(
@@ -127,7 +127,7 @@ class _VisorOverlayState extends ConsumerState<VisorOverlay> {
                                   top: stickModeOffsetY,
                                 ),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     _stickModeOption(
                                       '1 joystick mode',
@@ -143,6 +143,8 @@ class _VisorOverlayState extends ConsumerState<VisorOverlay> {
                               ),
                       ),
                     ),
+                    MainMenuButtons(game: game),
+                    const Expanded(child: SizedBox()),
                   ],
                 ),
               ],
