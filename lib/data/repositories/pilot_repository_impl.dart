@@ -14,4 +14,7 @@ class PilotRepositoryImpl implements PilotRepository {
   Future<PilotIdentity> updateCallSign(String callSign) {
     return _local.saveCallSign(callSign);
   }
+
+  @override
+  Future<void> signOut() => _local.clearSession();
 }

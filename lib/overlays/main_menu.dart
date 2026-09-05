@@ -1,12 +1,12 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:flame/flame.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:juanshooter/game.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:juanshooter/core/di/providers.dart';
+import 'package:juanshooter/overlays/main_menu_buttons.dart';
 
 class VisorOverlay extends ConsumerStatefulWidget {
   const VisorOverlay({required this.game, super.key});
@@ -115,114 +115,7 @@ class _VisorOverlayState extends ConsumerState<VisorOverlay> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Expanded(child: SizedBox()),
-                    Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            game.overlays.remove('MainMenu');
-                            game.overlays.add("HudDecoration");
-                            game.overlays.add("ScoreBoard");
-                            //game.setTimeScale(1.0);
-                            game.resumeEngine();
-                            game.resumeBgmMusic();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.withValues(alpha: .2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 80,
-                              vertical: 7,
-                            ),
-                            elevation: 8,
-                            shadowColor: Colors.black,
-                          ),
-                          child: const Text(
-                            'Jugar',
-                            style: TextStyle(
-                              fontFamily: "Megatrans",
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        ElevatedButton(
-                          onPressed: () {
-                            game.overlays.add('Leaderboard');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.withValues(alpha: .2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 58,
-                              vertical: 7,
-                            ),
-                            elevation: 8,
-                            shadowColor: Colors.black,
-                          ),
-                          child: const Text(
-                            'Ranking',
-                            style: TextStyle(
-                              fontFamily: "Megatrans",
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        ElevatedButton(
-                          onPressed: () {
-                            Flame.device.setLandscapeRightOnly();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.withValues(alpha: .2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 25,
-                              vertical: 7,
-                            ),
-                            elevation: 8,
-                            shadowColor: Colors.black,
-                          ),
-                          child: const Text(
-                            'Configuracion',
-                            style: TextStyle(
-                              fontFamily: "Megatrans",
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        ElevatedButton(
-                          onPressed: () {
-                            Flame.device.setLandscapeLeftOnly();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.withValues(alpha: .2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 60,
-                              vertical: 7,
-                            ),
-                            elevation: 8,
-                            shadowColor: Colors.black,
-                          ),
-                          child: const Text(
-                            'creditos',
-                            style: TextStyle(
-                              fontFamily: "Megatrans",
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    MainMenuButtons(game: game),
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,

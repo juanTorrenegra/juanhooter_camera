@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 abstract class PilotLocalDataSource {
   Future<PilotIdentity> loadOrCreate();
   Future<PilotIdentity> saveCallSign(String callSign);
+  Future<void> clearSession();
 }
 
 class PilotLocalDataSourceImpl implements PilotLocalDataSource {
@@ -37,5 +38,11 @@ class PilotLocalDataSourceImpl implements PilotLocalDataSource {
     final next = callSign.trim().toUpperCase();
     await _prefs.setString(_callSignKey, next);
     return current.copyWith(callSign: next);
+  }
+
+  @override
+  Future<void> clearSession() async {
+    await _prefs.remove(_idKey);
+    await _prefs.remove(_callSignKey);
   }
 }
